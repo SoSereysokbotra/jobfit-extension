@@ -6,12 +6,14 @@
    RULE: Never hardcode colors, spacing, shadows, or radii.
          Always reference these variables (via Tailwind token classes).
 
-   NOTE (Phase 2): the content-script build re-declares these same tokens on
-   `:host` inside the Shadow DOM — LinkedIn's `:root` will not carry ours, and
-   CSS custom properties must be resolvable inside the shadow tree.
+   The selector is `:root, :host` so ONE file serves both worlds:
+   - popup (light DOM): `:root` matches the document root.
+   - content script (Shadow DOM): `:host` matches the shadow host, so every token
+     inherits into the shadow tree. LinkedIn's `:root` never carries ours.
    ═══════════════════════════════════════════════════════════════ */
 
-:root {
+:root,
+:host {
   /* ─── BRAND COLORS (Sacred — Do NOT change) ─────────────── */
   --color-primary-900: #240046;
   --color-primary-800: #3C096C;

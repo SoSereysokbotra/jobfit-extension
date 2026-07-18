@@ -75,21 +75,65 @@ jobfit-extension/
       └─ components/        # Badge (ported) — more ported components to come
 ```
 
-Folders arriving in later phases (per the build plan): `src/background/` (service
-worker — Phase 1), `src/content/` + `src/content/sites/` (LinkedIn adapter + Shadow
-DOM mount — Phase 2), `src/data/` (mock/real endpoint adapters — Phase 3+).
+Folders arriving in later phases (per the build plan): `src/data/` (mock/real
+endpoint adapters — Phase 3+).
+
+### Two Tailwind builds (popup vs. content script)
+
+| | Popup | Content script |
+|---|---|---|
+| Config | `tailwind.config.ts` | `tailwind.content.config.ts` (via `@config` in `content.css`) |
+| Preflight | ON (owns its document) | **OFF** (never resets LinkedIn) |
+| Prefix | none | **`jf-`** (e.g. `jf-bg-primary-600`) |
+| Mounted in | its own page | **Shadow DOM**, tokens on `:host` |
+
+The token → class map is shared by both via `tailwind.theme.ts`; color values live
+once in `src/styles/tokens.css` (selector `:root, :host` so it serves both).
+
+## Testing Phase 2 (LinkedIn chip)
+
+1. `npm run build`, load/refresh `dist/` unpacked in `chrome://extensions`.
+2. Open a LinkedIn job — either a detail URL (`/jobs/view/<id>`) or the split
+   search view (`/jobs/search/?currentJobId=<id>`).
+3. A small purple **✦ JobFit** pill should appear right after the job title.
+4. Click through several jobs without reloading (LinkedIn is a SPA) — the pill
+   should re-appear/update on every job, and LinkedIn's own styling must be
+   visually unchanged.
+
+If LinkedIn changes its markup and the title can't be found, the chip simply
+doesn't render (fail-silent) — update the selectors in `src/content/sites/linkedin.ts`.
+Nothing is scraped or transmitted in this phase; only the URL's `externalId` is read.
+
+## Testing Phases 3–5 (P0 features — all on MOCK data)
+
+The P0 backend endpoints don't exist yet, so these run on deterministic mock data
+(same job id → same numbers). See `docs/CONTRACTS.md` for the real contracts and
+`src/data/source.ts` to flip a feature to `"real"` when its endpoint lands.
+
+On a LinkedIn job page, the **✦ JobFit** pill now shows a **match %**. Click it:
+- **Phase 3** — the badge expands to the 5 sub-score bars (skills / experience /
+  location / salary / culture), with skeleton → data → empty/error states.
+- **Phase 5** — under the badge, **skill-gap cards** appear. Tier is mocked to FREE,
+  so you'll see "🔒 Learning paths — Premium"; set `src/data/tier.ts` `mock()` to
+  return `"PREMIUM"` to preview the "Start Learning Path" action.
+- **Phase 4** — click **🏢 Company** in the badge → a focus-trapped sidebar slides in
+  (Glassdoor rating, funding, hiring velocity, your matches, salary range). Esc or the
+  scrim closes it.
+
+All feature UI lives in the Shadow DOM with `jf-`-prefixed token classes; the only
+inline styles are the score bars' dynamic `width` and the sidebar's z-index.
 
 ## Phase status
 
 | Phase | Scope | Status |
 |---|---|---|
 | **0** | Scaffold + design system (popup shell, tokens, ported Badge) | ✅ |
-| **1** | Auth bridge — cookie SSO, popup shows the logged-in user | ✅ this build |
-| 2 | Content-script foundation — Shadow DOM mount, LinkedIn adapter, static chip | ⬜ next |
-| 3 | P0 sub-score radar badge | ⬜ |
-| 4 | P0 company intelligence sidebar | ⬜ |
-| 5 | P0 skills-gap action cards | ⬜ |
-| 6–11 | Tracker, deadlines, salary, cover-letter, retention, ship | ⬜ |
+| **1** | Auth bridge — cookie SSO, popup shows the logged-in user | ✅ |
+| **2** | Content-script foundation — Shadow DOM mount, LinkedIn adapter, static chip | ✅ |
+| **3** | P0 sub-score radar badge (mock adapter) | ✅ this build |
+| **4** | P0 company intelligence sidebar (mock adapter) | ✅ this build |
+| **5** | P0 skills-gap action cards (mock adapter, tier gate) | ✅ this build |
+| 6–11 | Tracker, deadlines, salary, cover-letter, retention, ship | ⬜ next |
 
 ## Notes / decisions locked in
 

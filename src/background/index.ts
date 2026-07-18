@@ -9,6 +9,12 @@
  */
 import type { ExtMessage } from "@/shared/messaging";
 import { getAuthState, logout } from "./auth";
+import {
+  getCompanyIntel,
+  getJobMatch,
+  getSkillGapReport,
+  getSubscriptionTier,
+} from "./features";
 
 async function handle(message: ExtMessage): Promise<unknown> {
   switch (message.type) {
@@ -16,6 +22,14 @@ async function handle(message: ExtMessage): Promise<unknown> {
       return getAuthState();
     case "AUTH_LOGOUT":
       return logout();
+    case "GET_TIER":
+      return getSubscriptionTier();
+    case "GET_JOB_MATCH":
+      return getJobMatch(message.externalId, message.source);
+    case "GET_COMPANY_INTEL":
+      return getCompanyIntel(message.name);
+    case "GET_SKILL_GAP":
+      return getSkillGapReport(message.externalId, message.source);
     default: {
       // Exhaustiveness guard — a new ExtMessage without a case fails to compile.
       const _never: never = message;

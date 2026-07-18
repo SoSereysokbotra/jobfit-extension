@@ -11,3 +11,9 @@ interface ImportMetaEnv {
 interface ImportMeta {
   readonly env: ImportMetaEnv;
 }
+
+/** CSS imported with ?inline is returned as a string (for Shadow DOM injection). */
+declare module "*.css?inline" {
+  const css: string;
+  export default css;
+}

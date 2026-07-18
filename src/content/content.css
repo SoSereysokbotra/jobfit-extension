@@ -1,0 +1,16 @@
+/* The @config directive makes Tailwind process THIS file with the content-script
+   config (prefix "jf-", preflight OFF) instead of the popup config. */
+@config "../../tailwind.content.config.ts";
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Minimal box-sizing reset, scoped to the shadow tree only (preflight is off, so
+   Tailwind emits none). Because this lives inside the Shadow DOM stylesheet it
+   can never affect LinkedIn's page. */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
