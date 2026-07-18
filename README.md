@@ -83,9 +83,9 @@ DOM mount — Phase 2), `src/data/` (mock/real endpoint adapters — Phase 3+).
 
 | Phase | Scope | Status |
 |---|---|---|
-| **0** | Scaffold + design system (popup shell, tokens, ported Badge) | ✅ this build |
-| 1 | Auth bridge — cookie SSO, popup shows the logged-in user | ⬜ next |
-| 2 | Content-script foundation — Shadow DOM mount, LinkedIn adapter, static chip | ⬜ |
+| **0** | Scaffold + design system (popup shell, tokens, ported Badge) | ✅ |
+| **1** | Auth bridge — cookie SSO, popup shows the logged-in user | ✅ this build |
+| 2 | Content-script foundation — Shadow DOM mount, LinkedIn adapter, static chip | ⬜ next |
 | 3 | P0 sub-score radar badge | ⬜ |
 | 4 | P0 company intelligence sidebar | ⬜ |
 | 5 | P0 skills-gap action cards | ⬜ |
@@ -102,6 +102,29 @@ DOM mount — Phase 2), `src/data/` (mock/real endpoint adapters — Phase 3+).
   (`docs/CONTRACTS.md`); one flag flips to the real endpoint when it lands.
 - **Privacy / LinkedIn TOS:** never scrape or store job listings — only `externalId`
   + `source` ever leave the page.
-- `host_permissions` currently targets `http://localhost:3000/*` (dev API). Point it at
-  the deployed API origin before shipping. No network calls happen in Phase 0.
+- `host_permissions` currently targets `http://localhost:4000/*` (dev API origin — matches
+  the web app's `NEXT_PUBLIC_API_URL`). Point it at the deployed API origin before shipping,
+  and keep it in sync with `VITE_API_URL` (`src/shared/config.ts`).
+
+## Testing Phase 1 (cookie SSO)
+
+1. Run the JobFit **backend** (default `http://localhost:4000`) and **web app** (`http://localhost:3000`).
+2. `npm run build`, then load `dist/` unpacked in `chrome://extensions`.
+3. Log in on the web app (`http://localhost:3000/login`).
+4. Open the extension popup → it should show your **name / email / role** from `GET /auth/me`.
+5. Log out via the popup → the popup returns to the logged-out CTA.
+
+**If step 4 shows "not signed in" while you're logged in on the web app**, cookie SSO isn't
+working — the httpOnly refresh cookie isn't riding along on the worker's cross-origin fetch.
+This is the decision-2.2 risk this phase exists to surface. Most likely causes / the backend
+requirements for cookie SSO:
+- The refresh cookie must be `SameSite=None; Secure` to be sent from the extension origin
+  cross-site (over HTTPS in prod; on `localhost` `Lax` may work).
+- The API must allow the extension origin for CORS **with credentials**
+  (`Access-Control-Allow-Origin: chrome-extension://<id>` + `Allow-Credentials: true`).
+- `host_permissions` must cover the API origin (it does, for localhost:4000).
+
+**Fallback (option C)** if cookie SSO can't be made to work: a small bridge page on the web app
+(`externally_connectable`) hands the access token to the extension. The messaging/worker layer
+here is already structured so only the token-acquisition step changes — the rest is untouched.
 ```
