@@ -1,0 +1,16 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* The popup keeps Tailwind Preflight ON (it owns its whole document, unlike the
+   content script which will run Preflight OFF inside a Shadow DOM in Phase 2).
+   Only structural rules here — every color still comes from a token class. */
+@layer base {
+  html,
+  body {
+    margin: 0;
+    font-family: var(--font-family);
+    background-color: var(--color-bg);
+    color: var(--color-text-primary);
+  }
+}

@@ -1,0 +1,155 @@
+/* ═══════════════════════════════════════════════════════════════
+   JOBFIT DESIGN SYSTEM — CSS Custom Properties
+   Copied VERBATIM from the web app's src/app/globals.css `:root` block.
+   Single source of truth for the purple system.
+
+   RULE: Never hardcode colors, spacing, shadows, or radii.
+         Always reference these variables (via Tailwind token classes).
+
+   NOTE (Phase 2): the content-script build re-declares these same tokens on
+   `:host` inside the Shadow DOM — LinkedIn's `:root` will not carry ours, and
+   CSS custom properties must be resolvable inside the shadow tree.
+   ═══════════════════════════════════════════════════════════════ */
+
+:root {
+  /* ─── BRAND COLORS (Sacred — Do NOT change) ─────────────── */
+  --color-primary-900: #240046;
+  --color-primary-800: #3C096C;
+  --color-primary-700: #5A189A;
+  --color-primary-600: #7B2CBF;
+  --color-primary-500: #9D4EDD;
+
+  /* ─── EXTENDED PRIMARY SCALE (Computed tints) ───────────── */
+  --color-primary-400: #B185DB;
+  --color-primary-300: #C9A7EB;
+  --color-primary-200: #DCC8F5;
+  --color-primary-100: #EDE0FA;
+  --color-primary-50:  #F8F4FE;
+
+  /* ─── NEUTRAL SCALE ─────────────────────────────────────── */
+  --color-neutral-950: #0A0A0F;
+  --color-neutral-900: #1A1A2E;
+  --color-neutral-800: #2D2D44;
+  --color-neutral-700: #44445A;
+  --color-neutral-600: #5C5C72;
+  --color-neutral-500: #78788A;
+  --color-neutral-400: #9898A8;
+  --color-neutral-300: #B8B8C5;
+  --color-neutral-200: #D4D4DE;
+  --color-neutral-100: #EDEDF2;
+  --color-neutral-50:  #F7F7FA;
+
+  /* ─── SEMANTIC: SUCCESS ─────────────────────────────────── */
+  --color-success-600: #059669;
+  --color-success-500: #10B981;
+  --color-success-100: #D1FAE5;
+  --color-success-50:  #ECFDF5;
+
+  /* ─── SEMANTIC: WARNING ─────────────────────────────────── */
+  --color-warning-600: #D97706;
+  --color-warning-500: #F59E0B;
+  --color-warning-100: #FEF3C7;
+  --color-warning-50:  #FFFBEB;
+
+  /* ─── SEMANTIC: ERROR ───────────────────────────────────── */
+  --color-error-600: #DC2626;
+  --color-error-500: #EF4444;
+  --color-error-100: #FEE2E2;
+  --color-error-50:  #FEF2F2;
+
+  /* ─── SEMANTIC: INFO ────────────────────────────────────── */
+  --color-info-600: #2563EB;
+  --color-info-500: #3B82F6;
+  --color-info-100: #DBEAFE;
+  --color-info-50:  #EFF6FF;
+
+  /* ─── SEMANTIC ALIASES ──────────────────────────────────── */
+  --color-bg:             #FFFFFF;
+  --color-bg-secondary:   var(--color-neutral-50);
+  --color-surface:        #FFFFFF;
+  --color-surface-hover:  var(--color-neutral-50);
+  --color-card:           #FFFFFF;
+  --color-card-hover:     var(--color-primary-50);
+  --color-border:         var(--color-neutral-200);
+  --color-border-focus:   var(--color-primary-500);
+  --color-text-primary:   var(--color-neutral-900);
+  --color-text-secondary: var(--color-neutral-600);
+  --color-text-tertiary:  var(--color-neutral-500);
+  --color-text-disabled:  var(--color-neutral-400);
+  --color-text-on-primary:#FFFFFF;
+  --color-disabled:       var(--color-neutral-300);
+  --color-hover:          var(--color-primary-600);
+  --color-active:         var(--color-primary-800);
+
+  /* ─── ON-GRADIENT / OVERLAY ALIASES ─────────────────────────
+     For content sitting on primary gradients, dark panels, and
+     modal scrims. Use these instead of raw white/rgba values. */
+  --color-text-on-primary-muted:    rgba(255, 255, 255, 0.75);
+  --color-surface-on-primary:       rgba(255, 255, 255, 0.10);
+  --color-surface-on-primary-hover: rgba(255, 255, 255, 0.15);
+  --color-border-on-primary:        rgba(255, 255, 255, 0.25);
+  --color-scrim:                    rgba(10, 10, 15, 0.80);
+  --color-success-glow:             rgba(16, 185, 129, 0.12);
+
+  /* ─── SPACING SCALE ─────────────────────────────────────── */
+  --spacing-xs:  4px;
+  --spacing-sm:  8px;
+  --spacing-md:  16px;
+  --spacing-lg:  24px;
+  --spacing-xl:  32px;
+  --spacing-2xl: 48px;
+  --spacing-3xl: 64px;
+
+  /* ─── BORDER RADIUS ─────────────────────────────────────── */
+  --radius-sm:   6px;
+  --radius-md:   8px;
+  --radius-lg:   12px;
+  --radius-xl:   16px;
+  --radius-2xl:  24px;
+  --radius-full: 9999px;
+
+  /* ─── SHADOWS (tinted with brand color for cohesion) ───── */
+  --shadow-none: none;
+  --shadow-sm:  0 1px 2px rgba(36, 0, 70, 0.06);
+  --shadow-md:  0 4px 6px -1px rgba(36, 0, 70, 0.08),
+                0 2px 4px -2px rgba(36, 0, 70, 0.04);
+  --shadow-lg:  0 10px 15px -3px rgba(36, 0, 70, 0.1),
+                0 4px 6px -4px rgba(36, 0, 70, 0.05);
+  --shadow-xl:  0 20px 25px -5px rgba(36, 0, 70, 0.12),
+                0 8px 10px -6px rgba(36, 0, 70, 0.06);
+
+  /* ─── TYPOGRAPHY ────────────────────────────────────────── */
+  --font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+
+  --font-size-xs:   0.75rem;
+  --font-size-sm:   0.875rem;
+  --font-size-base: 1rem;
+  --font-size-lg:   1.125rem;
+  --font-size-xl:   1.25rem;
+  --font-size-2xl:  1.5rem;
+  --font-size-3xl:  1.875rem;
+  --font-size-4xl:  2.25rem;
+  --font-size-5xl:  3rem;
+
+  --line-height-tight:  1.2;
+  --line-height-normal: 1.5;
+  --line-height-relaxed:1.65;
+
+  --font-weight-normal:   400;
+  --font-weight-medium:   500;
+  --font-weight-semibold: 600;
+  --font-weight-bold:     700;
+  --font-weight-extrabold:800;
+
+  /* ─── TRANSITIONS ───────────────────────────────────────── */
+  --transition-fast: 150ms ease;
+  --transition-base: 200ms ease;
+  --transition-slow: 300ms ease;
+
+  /* ─── Z-INDEX SCALE ─────────────────────────────────────── */
+  --z-dropdown: 100;
+  --z-sticky:   200;
+  --z-modal:    300;
+  --z-toast:    400;
+  --z-tooltip:  500;
+}
