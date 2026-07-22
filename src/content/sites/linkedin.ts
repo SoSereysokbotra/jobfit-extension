@@ -33,6 +33,14 @@ const COMPANY_SELECTORS = [
   ".jobs-details-top-card__company-url",
 ];
 
+/** The description line reads "Phnom Penh, Cambodia · Reposted 2 weeks ago · 28 applicants". */
+const LOCATION_SELECTORS = [
+  ".job-details-jobs-unified-top-card__primary-description-container",
+  ".jobs-unified-top-card__primary-description",
+  ".job-details-jobs-unified-top-card__tertiary-description-container",
+  ".jobs-unified-top-card__subtitle-primary-grouping",
+];
+
 export const linkedin: SiteAdapter = {
   source: "linkedin",
 
@@ -63,5 +71,14 @@ export const linkedin: SiteAdapter = {
 
   getCompany(): string | null {
     return firstMatch(COMPANY_SELECTORS)?.textContent?.trim() || null;
+  },
+
+  getLocation(): string | null {
+    const text = firstMatch(LOCATION_SELECTORS)?.textContent;
+    if (!text) return null;
+    // Keep only the leading location segment, dropping "· Reposted 2 weeks ago
+    // · 28 applicants". LinkedIn uses "·" (and sometimes "•") as the separator.
+    const location = text.split(/[·•]/)[0]?.replace(/\s+/g, " ").trim();
+    return location || null;
   },
 };

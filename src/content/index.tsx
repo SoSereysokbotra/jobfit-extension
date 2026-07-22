@@ -1,23 +1,24 @@
 /**
- * Content-script bootstrap — Phase 2 foundation.
+ * Content-script bootstrap.
  *
  * Responsibilities:
- *  1. Mount a React UI inside a Shadow DOM so LinkedIn's CSS can't reach us and
+ *  1. Mount React UI inside a Shadow DOM so LinkedIn's CSS can't reach us and
  *     our CSS (tokens + `jf-`-prefixed utilities, Preflight OFF) can't reach it.
  *  2. Use the site adapter to detect a job page and find the title to anchor to.
  *  3. Survive LinkedIn's SPA navigation (client-side routing) and re-renders:
  *     (re)mount whenever the job changes or LinkedIn removes our chip.
+ *  4. Drive the Easy Apply cover-letter injection (Phase 9) off the same tick.
  *
  * Everything runs behind try/catch and fails silently — a DOM change on
  * LinkedIn's side must never throw into their page.
  */
 import { createRoot, type Root } from "react-dom/client";
-import tokensCss from "@/styles/tokens.css?inline";
-import contentCss from "./content.css?inline";
+import { createShadowHost } from "./shadow";
 import { linkedin } from "./sites/linkedin";
 import type { SiteAdapter } from "./sites/types";
 import type { JobSource } from "@/shared/types";
 import { JobFitApp } from "./JobFitApp";
+import { syncEasyApply } from "./easyApply";
 
 const HOST_ID = "jobfit-chip-host";
 
@@ -29,19 +30,6 @@ function pickAdapter(hostname: string): SiteAdapter | null {
 }
 
 const adapter = pickAdapter(location.hostname);
-
-// ─── Shadow stylesheet (built once) ─────────────────────────────────────────
-// tokens.css declares vars on `:host`; content.css holds the jf-prefixed
-// utilities. Both are inlined as strings (?inline) so nothing is injected into
-// LinkedIn's light DOM.
-let sheet: CSSStyleSheet | null = null;
-function styleSheet(): CSSStyleSheet {
-  if (!sheet) {
-    sheet = new CSSStyleSheet();
-    sheet.replaceSync(`${tokensCss}\n${contentCss}`);
-  }
-  return sheet;
-}
 
 // ─── Mount lifecycle ────────────────────────────────────────────────────────
 let root: Root | null = null;
@@ -61,24 +49,28 @@ function mount(anchor: HTMLElement, jobId: string): void {
   if (host?.isConnected && mountedJobId === jobId) return;
   unmount();
 
-  host = document.createElement("span");
+  const { host: created, mountPoint } = createShadowHost("span");
+  host = created;
   host.id = HOST_ID;
   // Structural inline styles only (layout/position) — never color.
   host.style.display = "inline-flex";
   host.style.verticalAlign = "middle";
   host.style.marginLeft = "8px";
 
-  const shadow = host.attachShadow({ mode: "open" });
-  shadow.adoptedStyleSheets = [styleSheet()];
-  const mountPoint = document.createElement("div");
-  shadow.appendChild(mountPoint);
-
   anchor.insertAdjacentElement("afterend", host);
   root = createRoot(mountPoint);
-  // Company name is read once at mount for LOCAL use (the sidebar) — never sent.
+  // Company + title are read once at mount for LOCAL use (sidebar/salary) — never sent.
   const company = adapter?.getCompany() ?? null;
+  const role = adapter?.getTitle() ?? null;
+  const location = adapter?.getLocation() ?? null;
   root.render(
-    <JobFitApp externalId={jobId} source={adapter!.source as JobSource} company={company} />,
+    <JobFitApp
+      externalId={jobId}
+      source={adapter!.source as JobSource}
+      company={company}
+      role={role}
+      location={location}
+    />,
   );
   mountedJobId = jobId;
 }
@@ -88,6 +80,11 @@ function sync(): void {
   try {
     const url = location.href;
     const jobId = adapter.getExternalId(url);
+
+    // Easy Apply cover-letter button (Phase 9) — independent of the badge mount,
+    // since the modal can be open with or without the title anchor present.
+    syncEasyApply(adapter, jobId);
+
     if (!jobId) {
       unmount();
       return;

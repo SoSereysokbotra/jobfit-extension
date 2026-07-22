@@ -8,11 +8,16 @@
  * manifest.config.ts, or the background worker's cross-origin fetch (and the
  * cookie that rides with it) will be blocked. Keep the two in sync.
  */
-export const API_BASE_URL: string =
-  import.meta.env.VITE_API_URL ?? "http://localhost:4000/api/v1";
+/** Drop any trailing slash so `${BASE}/path` never produces a double slash. */
+const trimSlash = (url: string): string => url.replace(/\/+$/, "");
 
-export const WEB_APP_URL: string =
-  import.meta.env.VITE_WEB_URL ?? "http://localhost:3000";
+export const API_BASE_URL: string = trimSlash(
+  import.meta.env.VITE_API_URL ?? "http://localhost:4000/api/v1",
+);
+
+export const WEB_APP_URL: string = trimSlash(
+  import.meta.env.VITE_WEB_URL ?? "http://localhost:3000",
+);
 
 /** Where the logged-out CTA sends the user to authenticate. */
 export const LOGIN_URL = `${WEB_APP_URL}/login`;

@@ -10,11 +10,15 @@
 import type { ExtMessage } from "@/shared/messaging";
 import { getAuthState, logout } from "./auth";
 import {
+  generateCoverLetterFor,
+  getApplicationsPipeline,
   getCompanyIntel,
+  getDeadline,
   getJobMatch,
+  getSalary,
   getSkillGapReport,
-  getSubscriptionTier,
 } from "./features";
+import { registerAlarmHandlers, setupAlarms } from "./alarms";
 
 async function handle(message: ExtMessage): Promise<unknown> {
   switch (message.type) {
@@ -22,14 +26,31 @@ async function handle(message: ExtMessage): Promise<unknown> {
       return getAuthState();
     case "AUTH_LOGOUT":
       return logout();
-    case "GET_TIER":
-      return getSubscriptionTier();
     case "GET_JOB_MATCH":
-      return getJobMatch(message.externalId, message.source);
+      return getJobMatch({
+        externalId: message.externalId,
+        source: message.source,
+        title: message.title,
+        company: message.company,
+        location: message.location,
+      });
     case "GET_COMPANY_INTEL":
       return getCompanyIntel(message.name);
     case "GET_SKILL_GAP":
       return getSkillGapReport(message.externalId, message.source);
+    case "GET_APPLICATIONS":
+      return getApplicationsPipeline(message.limit ?? 5);
+    case "GET_SALARY_INTEL":
+      return getSalary(message.company, message.role);
+    case "GET_JOB_DEADLINE":
+      return getDeadline(message.externalId, message.source);
+    case "GENERATE_COVER_LETTER":
+      return generateCoverLetterFor({
+        externalId: message.externalId,
+        source: message.source,
+        company: message.company,
+        role: message.role,
+      });
     default: {
       // Exhaustiveness guard — a new ExtMessage without a case fails to compile.
       const _never: never = message;
@@ -37,6 +58,11 @@ async function handle(message: ExtMessage): Promise<unknown> {
     }
   }
 }
+
+// Deadline-reminder alarm lifecycle (Phase 7).
+chrome.runtime.onInstalled.addListener(() => setupAlarms());
+chrome.runtime.onStartup.addListener(() => setupAlarms());
+registerAlarmHandlers();
 
 chrome.runtime.onMessage.addListener((message: ExtMessage, _sender, sendResponse) => {
   handle(message)

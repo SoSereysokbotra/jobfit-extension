@@ -25,6 +25,10 @@ export interface SiteAdapter {
   /** Best-effort job title text — LOCAL use only, never transmitted. */
   getTitle(): string | null;
 
-  /** Best-effort company name — LOCAL use only, never transmitted. */
+  /** Best-effort company name — sent as an identifier only. */
   getCompany(): string | null;
+
+  /** Best-effort location text, e.g. "Phnom Penh, Cambodia". Improves the
+   *  location sub-score; null when it can't be read. */
+  getLocation(): string | null;
 }

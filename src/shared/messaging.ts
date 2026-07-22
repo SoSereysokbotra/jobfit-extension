@@ -6,10 +6,13 @@
 import type {
   AuthUser,
   CompanyIntel,
+  CoverLetter,
+  JobDeadline,
   JobMatch,
   JobSource,
+  SalaryIntel,
   SkillGapReport,
-  SubscriptionTier,
+  TrackedApplication,
 } from "./types";
 
 /** Resolved auth state the worker reports back to any UI surface. */
@@ -33,19 +36,40 @@ export type DataResult<T> =
 export type ExtMessage =
   | { type: "AUTH_GET_STATE" }
   | { type: "AUTH_LOGOUT" }
-  | { type: "GET_TIER" }
-  | { type: "GET_JOB_MATCH"; externalId: string; source: JobSource }
+  | {
+      type: "GET_JOB_MATCH";
+      externalId: string;
+      source: JobSource;
+      /** Identifiers only — the posting body is never sent. */
+      title: string | null;
+      company: string | null;
+      location: string | null;
+    }
   | { type: "GET_COMPANY_INTEL"; name: string }
-  | { type: "GET_SKILL_GAP"; externalId: string; source: JobSource };
+  | { type: "GET_SKILL_GAP"; externalId: string; source: JobSource }
+  | { type: "GET_APPLICATIONS"; limit?: number }
+  | { type: "GET_SALARY_INTEL"; company: string; role: string }
+  | { type: "GET_JOB_DEADLINE"; externalId: string; source: JobSource }
+  | {
+      type: "GENERATE_COVER_LETTER";
+      externalId: string;
+      source: JobSource;
+      /** Display name only — the job description is never sent. */
+      company: string | null;
+      role: string | null;
+    };
 
 /** Response shape per message type. */
 export interface ExtResponseMap {
   AUTH_GET_STATE: AuthState;
   AUTH_LOGOUT: { ok: boolean };
-  GET_TIER: SubscriptionTier;
   GET_JOB_MATCH: DataResult<JobMatch>;
   GET_COMPANY_INTEL: DataResult<CompanyIntel>;
   GET_SKILL_GAP: DataResult<SkillGapReport>;
+  GET_APPLICATIONS: DataResult<TrackedApplication[]>;
+  GET_SALARY_INTEL: DataResult<SalaryIntel>;
+  GET_JOB_DEADLINE: DataResult<JobDeadline>;
+  GENERATE_COVER_LETTER: DataResult<CoverLetter>;
 }
 
 type MessageOf<T extends ExtMessage["type"]> = Extract<ExtMessage, { type: T }>;

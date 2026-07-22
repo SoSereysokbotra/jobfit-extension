@@ -1,7 +1,6 @@
 /**
- * Phase 5 — Skills Gap action cards. FREE tier sees the gap only; PREMIUM+ also
- * gets a "Start Learning Path" action (the `learningPath` field is populated by
- * the backend/mock per tier — the UI just renders what it's given).
+ * Phase 5 — Skills Gap action cards. Each gap offers a "Start Learning Path"
+ * action when the backend supplies one, plus a "jobs without X" shortcut.
  */
 import { sendMessage } from "@/shared/messaging";
 import type { JobSource, SkillGap, SkillGapReport } from "@/shared/types";
@@ -19,7 +18,7 @@ function GapCard({ gap }: { gap: SkillGap }) {
         Required by {gap.demandCount.toLocaleString()} jobs you&apos;d fit
       </p>
       <div className="jf-mt-2 jf-flex jf-flex-wrap jf-gap-1">
-        {gap.learningPath ? (
+        {gap.learningPath && (
           <button
             type="button"
             onClick={() => openWebApp("/learning")}
@@ -27,10 +26,6 @@ function GapCard({ gap }: { gap: SkillGap }) {
           >
             📚 Start Learning Path · {gap.learningPath.durationWeeks}w
           </button>
-        ) : (
-          <span className="jf-rounded-md jf-bg-neutral-100 jf-px-2 jf-py-1 jf-text-xs jf-text-content-tertiary">
-            🔒 Learning paths — Premium
-          </span>
         )}
         <button
           type="button"

@@ -10,12 +10,25 @@ export const DATA_SOURCE: {
   recommendations: Source;
   companies: Source;
   learningGap: Source;
-  tier: Source;
+  applications: Source;
+  salary: Source;
+  deadlines: Source;
+  coverLetter: Source;
+  scout: Source;
 } = {
-  recommendations: "mock", // GET /recommendations/by-job
+  // GET /recommendations/by-job — the endpoint IS implemented in jobfit-backend,
+  // but flip this to "real" only AFTER that backend is deployed, or every job
+  // page will show an error instead of a score.
+  recommendations: "mock",
   companies: "mock", // GET /companies/by-name
   learningGap: "mock", // GET /learning/gap
-  tier: "mock", // subscription tier (no endpoint wired yet)
+  // `applications` uses the REAL, existing endpoint by default (GET /applications
+  // + GET /jobs/{id}). Flip to "mock" to preview the tracker UI without a backend.
+  applications: "real",
+  salary: "mock", // GET /salary (endpoint not built yet)
+  deadlines: "mock", // saved-jobs deadline (endpoint not built yet)
+  coverLetter: "mock", // POST /generate/cover-letter (Qwen 3 — planned)
+  scout: "mock", // GET /recommendations/scout (endpoint not built yet)
 };
 
 /** Shared helpers for mock adapters. */

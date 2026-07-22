@@ -4,17 +4,23 @@
  * The worker is the only place network + auth errors are interpreted.
  */
 import { ApiError } from "./api";
-import { getRecommendationByJob } from "@/data/recommendations";
+import { getRecommendationByJob, type JobMatchInput } from "@/data/recommendations";
 import { getCompanyByName } from "@/data/companies";
 import { getSkillGap } from "@/data/learning";
-import { getTier } from "@/data/tier";
+import { getApplications } from "@/data/applications";
+import { getSalaryIntel } from "@/data/salary";
+import { getJobDeadline } from "@/data/deadlines";
+import { generateCoverLetter, type CoverLetterInput } from "@/data/generate";
 import type { DataResult } from "@/shared/messaging";
 import type {
   CompanyIntel,
+  CoverLetter,
+  JobDeadline,
   JobMatch,
   JobSource,
+  SalaryIntel,
   SkillGapReport,
-  SubscriptionTier,
+  TrackedApplication,
 } from "@/shared/types";
 
 /**
@@ -41,11 +47,8 @@ async function toResult<T>(
   }
 }
 
-export function getJobMatch(
-  externalId: string,
-  source: JobSource,
-): Promise<DataResult<JobMatch>> {
-  return toResult(() => getRecommendationByJob(externalId, source));
+export function getJobMatch(input: JobMatchInput): Promise<DataResult<JobMatch>> {
+  return toResult(() => getRecommendationByJob(input));
 }
 
 export function getCompanyIntel(name: string): Promise<DataResult<CompanyIntel>> {
@@ -62,6 +65,37 @@ export function getSkillGapReport(
   );
 }
 
-export function getSubscriptionTier(): Promise<SubscriptionTier> {
-  return getTier();
+export function getApplicationsPipeline(
+  limit: number,
+): Promise<DataResult<TrackedApplication[]>> {
+  return toResult(
+    () => getApplications(limit),
+    (rows) => rows.length === 0,
+  );
+}
+
+export function getSalary(
+  company: string,
+  role: string,
+): Promise<DataResult<SalaryIntel>> {
+  return toResult(() => getSalaryIntel(company, role));
+}
+
+export function generateCoverLetterFor(
+  input: CoverLetterInput,
+): Promise<DataResult<CoverLetter>> {
+  return toResult(
+    () => generateCoverLetter(input),
+    // A model that returns nothing usable is an empty state, not a success.
+    (letter) => letter.text.trim().length === 0,
+  );
+}
+
+export function getDeadline(
+  externalId: string,
+  source: JobSource,
+): Promise<DataResult<JobDeadline>> {
+  // A job with no deadline is still a valid "ok" result (deadline: null); the UI
+  // decides whether to render the chip.
+  return toResult(() => getJobDeadline(externalId, source));
 }

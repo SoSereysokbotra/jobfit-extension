@@ -1,5 +1,7 @@
 import { Badge } from "@/shared/components/Badge";
 import { AuthPanel } from "./AuthPanel";
+import { TrackerPanel } from "./TrackerPanel";
+import { SettingsPanel } from "./SettingsPanel";
 
 /**
  * Popup shell. Phase 1 wires the AuthPanel to the background worker so it shows
@@ -29,6 +31,10 @@ export function App() {
       <main className="flex flex-col gap-3 p-4">
         {/* Live auth state from the service worker (Phase 1) */}
         <AuthPanel />
+        {/* Quick Apply Tracker (Phase 6) — hides itself when logged out */}
+        <TrackerPanel />
+        {/* Opt-in settings (Phase 7) */}
+        <SettingsPanel />
       </main>
     </div>
   );
