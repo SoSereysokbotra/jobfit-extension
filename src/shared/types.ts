@@ -46,13 +46,18 @@ export interface JobMatchSubScores {
 export interface JobMatch {
   externalId: string;
   source: JobSource;
-  /** 0–100 weighted total. */
-  overall: number;
+  /**
+   * 0–100 weighted total, or NULL when it couldn't be computed. Skills is the
+   * only sub-score that measures fit to THIS role, so when it didn't run the
+   * backend emits no total rather than one built from experience + location —
+   * those are generous by construction and scored an unrelated job 92%.
+   */
+  overall: number | null;
   subScores: JobMatchSubScores;
   /**
    * False when the semantic (skills) component couldn't be computed — no
-   * candidate embedding, or the AI service was unreachable — and a neutral
-   * value was substituted. Surfaced so the score isn't over-trusted.
+   * candidate embedding, or the AI service was unreachable. Then `overall` is
+   * null and `subScores.skills` is a placeholder to show as "not computed".
    */
   semantic: boolean;
 }
@@ -186,6 +191,51 @@ export interface ScoutMatch {
   score: number;
   /** Where to send the user when they click the notification. */
   url: string;
+}
+
+// ─── P2 · Duplicate application detector (GET /applications/similar) ─────────
+export interface DuplicateMatch {
+  applicationId: string;
+  jobTitle: string;
+  companyName: string | null;
+  status: ApplicationStatus;
+  appliedAt: string;
+}
+
+// ─── P2 · Interview prep trigger (POST /generate/interview) ─────────────────
+export interface InterviewQuestionType {
+  /** e.g. "System Design". */
+  label: string;
+  /** 0–100 share of the interview. */
+  pct: number;
+}
+export interface InterviewPrep {
+  questionTypes: InterviewQuestionType[];
+  topQuestions: string[];
+  model: string | null;
+}
+
+// ─── P2 · Momentum score (real: GET /analytics/my-stats) ────────────────────
+export interface MomentumStats {
+  totalApplications: number;
+  totalInterviews: number;
+  totalOffers: number;
+  /** Fractions in [0,1], per the backend AnalyticsStatsResponseDto. */
+  interviewRate: number;
+  offerRate: number;
+  profileViewCount: number;
+  /** 0–100 gamified momentum, derived from the counts above. */
+  momentum: number;
+}
+
+// ─── P4 · Full-page match report (POST /match-report) ───────────────────────
+/**
+ * What the backend hands back after generating a report: just its id. The report
+ * itself is rendered by the web app at {WEB_APP_URL}/match-report/{id} — the
+ * extension never fetches or displays the payload, so it doesn't mirror it.
+ */
+export interface MatchReportRef {
+  id: string;
 }
 
 // ─── Extension settings (chrome.storage.local) ──────────────────────────────

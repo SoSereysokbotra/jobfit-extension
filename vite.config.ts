@@ -6,6 +6,12 @@ import manifest from "./manifest.config";
 
 export default defineConfig({
   plugins: [react(), crx({ manifest })],
+  build: {
+    // MV3 extension pages don't benefit from modulepreload, and Chrome logs a
+    // harmless "cross-world extension resource mismatch" warning for each one.
+    // Disable it so the console stays clean for real debugging.
+    modulePreload: false,
+  },
   resolve: {
     alias: {
       "@": fileURLToPath(new URL("./src", import.meta.url)),

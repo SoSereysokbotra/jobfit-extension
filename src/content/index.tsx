@@ -70,6 +70,9 @@ function mount(anchor: HTMLElement, jobId: string): void {
       company={company}
       role={role}
       location={location}
+      // Passed as a callback, not a value: the description is read only if the
+      // user clicks "Full Report", never at mount.
+      getDescription={() => adapter?.getDescription() ?? null}
     />,
   );
   mountedJobId = jobId;

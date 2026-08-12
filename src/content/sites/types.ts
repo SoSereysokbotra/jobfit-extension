@@ -4,7 +4,8 @@
  * isolated to one file and fails silently without breaking the host page.
  *
  * PRIVACY / TOS: adapters may read title/company text for LOCAL use only
- * (anchoring, labels). Only `externalId` + `source` may ever leave the page.
+ * (anchoring, labels). Only `externalId` + `source` may ever leave the page —
+ * with ONE deliberate, user-initiated exception, `getDescription()`; see there.
  */
 export interface SiteAdapter {
   /** Stable identifier sent to the backend alongside externalId, e.g. "linkedin". */
@@ -31,4 +32,15 @@ export interface SiteAdapter {
   /** Best-effort location text, e.g. "Phnom Penh, Cambodia". Improves the
    *  location sub-score; null when it can't be read. */
   getLocation(): string | null;
+
+  /**
+   * The visible "About the job" text, or null when it isn't on the page.
+   *
+   * THE ONE EXCEPTION to "only identifiers leave the page", and it is narrow on
+   * purpose: read only when the user clicks *Full Report*, sent once so the
+   * backend can extract the job's requirements, and never stored as a listing —
+   * only the derived report is kept, on that user's own row. Nothing calls this
+   * on page load, and no background job calls it at all.
+   */
+  getDescription(): string | null;
 }

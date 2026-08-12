@@ -219,7 +219,7 @@ Generation is mocked (`POST /generate/cover-letter` doesn't exist yet); flip
 | **7** | P1 Deadline urgency chip + opt-in notifications (alarms) | ✅ |
 | **8** | P1 Salary intelligence panel (mock adapter) | ✅ |
 | **9** | P1 Cover letter — badge panel + Easy Apply auto-fill (mock adapter) | ✅ |
-| 10 | P2 Retention set (duplicate detector, interview prep, momentum) | ⬜ **skipped** |
+| **10** | P2 Retention set — duplicate detector, interview prep, momentum (real /analytics/my-stats) | ✅ |
 | **11** | P3 Scout alerts + ship (icons, privacy policy, store pack, packaging) | ✅ |
 
 ## Notes / decisions locked in

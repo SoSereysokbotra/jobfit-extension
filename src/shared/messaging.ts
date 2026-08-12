@@ -7,9 +7,13 @@ import type {
   AuthUser,
   CompanyIntel,
   CoverLetter,
+  DuplicateMatch,
+  InterviewPrep,
   JobDeadline,
   JobMatch,
   JobSource,
+  MatchReportRef,
+  MomentumStats,
   SalaryIntel,
   SkillGapReport,
   TrackedApplication,
@@ -46,7 +50,7 @@ export type ExtMessage =
       location: string | null;
     }
   | { type: "GET_COMPANY_INTEL"; name: string }
-  | { type: "GET_SKILL_GAP"; externalId: string; source: JobSource }
+  | { type: "GET_SKILL_GAP"; externalId: string; source: JobSource; title: string | null }
   | { type: "GET_APPLICATIONS"; limit?: number }
   | { type: "GET_SALARY_INTEL"; company: string; role: string }
   | { type: "GET_JOB_DEADLINE"; externalId: string; source: JobSource }
@@ -57,6 +61,35 @@ export type ExtMessage =
       /** Display name only — the job description is never sent. */
       company: string | null;
       role: string | null;
+    }
+  | {
+      type: "GET_DUPLICATE_CHECK";
+      externalId: string;
+      source: JobSource;
+      title: string | null;
+      company: string | null;
+    }
+  | {
+      type: "GENERATE_INTERVIEW_PREP";
+      externalId: string;
+      source: JobSource;
+      company: string | null;
+      role: string | null;
+    }
+  | { type: "GET_MOMENTUM" }
+  | {
+      type: "CREATE_MATCH_REPORT";
+      externalId: string;
+      source: JobSource;
+      title: string;
+      company: string | null;
+      location: string | null;
+      /**
+       * The visible posting text. The ONE message that carries page content, and
+       * only because the user clicked "Full Report": the backend extracts the
+       * job's requirements from it and stores only the derived report.
+       */
+      jobDescription: string;
     };
 
 /** Response shape per message type. */
@@ -70,6 +103,10 @@ export interface ExtResponseMap {
   GET_SALARY_INTEL: DataResult<SalaryIntel>;
   GET_JOB_DEADLINE: DataResult<JobDeadline>;
   GENERATE_COVER_LETTER: DataResult<CoverLetter>;
+  GET_DUPLICATE_CHECK: DataResult<DuplicateMatch>;
+  GENERATE_INTERVIEW_PREP: DataResult<InterviewPrep>;
+  GET_MOMENTUM: DataResult<MomentumStats>;
+  CREATE_MATCH_REPORT: DataResult<MatchReportRef>;
 }
 
 type MessageOf<T extends ExtMessage["type"]> = Extract<ExtMessage, { type: T }>;

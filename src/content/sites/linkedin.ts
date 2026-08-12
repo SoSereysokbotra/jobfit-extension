@@ -33,6 +33,30 @@ const COMPANY_SELECTORS = [
   ".jobs-details-top-card__company-url",
 ];
 
+/**
+ * The "About the job" body. LinkedIn has shipped several containers for it, and
+ * the outermost (`.jobs-description`) also swallows the "See more" control and
+ * the skills-match widget — so the inner content nodes are tried first.
+ */
+const DESCRIPTION_SELECTORS = [
+  ".jobs-description-content__text--stretch",
+  ".jobs-description__content .jobs-box__html-content",
+  ".jobs-description-content__text",
+  "#job-details",
+  ".jobs-box__html-content",
+  ".jobs-description",
+];
+
+/**
+ * Upper bound on the description we send.
+ *
+ * Requirement extraction reads the top of a posting; the tail is benefits, EEO
+ * boilerplate and "how to apply", none of which is a requirement. 8k characters
+ * covers a long posting in full while keeping the request (and the model's
+ * context) bounded — the backend caps it again independently.
+ */
+const MAX_DESCRIPTION_CHARS = 8000;
+
 /** The description line reads "Phnom Penh, Cambodia · Reposted 2 weeks ago · 28 applicants". */
 const LOCATION_SELECTORS = [
   ".job-details-jobs-unified-top-card__primary-description-container",
@@ -80,5 +104,21 @@ export const linkedin: SiteAdapter = {
     // · 28 applicants". LinkedIn uses "·" (and sometimes "•") as the separator.
     const location = text.split(/[·•]/)[0]?.replace(/\s+/g, " ").trim();
     return location || null;
+  },
+
+  getDescription(): string | null {
+    // `innerText` (not textContent) so LinkedIn's <li>/<br> layout keeps its line
+    // breaks — the requirement extractor reads a bulleted list far better than one
+    // run-on paragraph, and textContent would glue every bullet together.
+    const text = firstMatch(DESCRIPTION_SELECTORS)?.innerText;
+    if (!text) return null;
+    const cleaned = text
+      .replace(/[ \t]+/g, " ")
+      .replace(/\n{3,}/g, "\n\n")
+      .trim();
+    // A stub like "About the job" alone means the panel hasn't loaded its body yet;
+    // sending it would produce a report with no requirements in it.
+    if (cleaned.length < 80) return null;
+    return cleaned.slice(0, MAX_DESCRIPTION_CHARS);
   },
 };

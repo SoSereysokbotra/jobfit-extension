@@ -13,16 +13,16 @@ const FOCUSABLE =
   'a[href],button:not([disabled]),input,select,textarea,[tabindex]:not([tabindex="-1"])';
 
 const VELOCITY_LABEL: Record<HiringVelocity, string> = {
-  LOW: "🐢 Low",
-  MEDIUM: "🚶 Medium",
-  HIGH: "🔥 High",
+  LOW: "Low",
+  MEDIUM: "Medium",
+  HIGH: "High",
 };
 
 function Row({ label, value }: { label: string; value: string }) {
   return (
     <div className="jf-flex jf-items-center jf-justify-between jf-py-1">
-      <span className="jf-text-xs jf-text-content-secondary">{label}</span>
-      <span className="jf-text-xs jf-font-semibold jf-text-content">{value}</span>
+      <span className="jf-text-sm jf-text-content-secondary">{label}</span>
+      <span className="jf-text-sm jf-font-semibold jf-text-content">{value}</span>
     </div>
   );
 }
@@ -32,9 +32,9 @@ function Body({ data }: { data: CompanyIntel }) {
     `${currency === "USD" ? "$" : ""}${Math.round(n / 1000)}K`;
   return (
     <div className="jf-flex jf-flex-col jf-gap-3">
-      <div className="jf-rounded-md jf-border jf-border-border jf-p-2">
+      <div className="jf-rounded-md jf-border jf-border-border jf-p-3">
         {data.glassdoorRating != null && (
-          <Row label="Glassdoor" value={`⭐ ${data.glassdoorRating.toFixed(1)}`} />
+          <Row label="Glassdoor" value={`${data.glassdoorRating.toFixed(1)}`} />
         )}
         {data.fundingStage && <Row label="Funding" value={data.fundingStage} />}
         {data.hiringVelocity && (
@@ -45,12 +45,12 @@ function Body({ data }: { data: CompanyIntel }) {
 
       {data.topMatches.length > 0 && (
         <div>
-          <h3 className="jf-mb-1 jf-text-xs jf-font-semibold jf-text-content">Your matches</h3>
+          <h3 className="jf-mb-2 jf-text-sm jf-font-bold jf-text-content">Your matches</h3>
           <div className="jf-flex jf-flex-col jf-gap-1">
             {data.topMatches.map((m) => (
               <div key={m.title} className="jf-flex jf-items-center jf-justify-between">
-                <span className="jf-text-xs jf-text-content-secondary">{m.title}</span>
-                <span className="jf-text-xs jf-font-semibold jf-text-primary-600">{m.score}%</span>
+                <span className="jf-text-sm jf-text-content-secondary">{m.title}</span>
+                <span className="jf-text-sm jf-font-semibold jf-text-primary-600">{m.score}%</span>
               </div>
             ))}
           </div>
@@ -58,13 +58,13 @@ function Body({ data }: { data: CompanyIntel }) {
       )}
 
       {data.salaryRange && (
-        <div className="jf-rounded-md jf-bg-background-secondary jf-p-2">
-          <p className="jf-text-xs jf-text-content-secondary">Salary range for this role</p>
-          <p className="jf-text-sm jf-font-semibold jf-text-content">
+        <div className="jf-rounded-md jf-bg-background-secondary jf-p-3">
+          <p className="jf-text-sm jf-text-content-secondary">Salary range for this role</p>
+          <p className="jf-text-base jf-font-semibold jf-text-content">
             {money(data.salaryRange.min, data.salaryRange.currency)} –{" "}
             {money(data.salaryRange.max, data.salaryRange.currency)}
           </p>
-          <p className="jf-text-xs jf-text-content-tertiary">
+          <p className="jf-text-sm jf-text-content-tertiary">
             Based on {data.salaryRange.dataPoints} data points
           </p>
         </div>

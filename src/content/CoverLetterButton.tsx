@@ -34,7 +34,7 @@ export function CoverLetterButton({
           type="button"
           onClick={() => void generate(onInsert)}
           disabled={status === "loading"}
-          className="jf-inline-flex jf-items-center jf-gap-1 jf-rounded-md jf-bg-gradient-to-br jf-from-primary-800 jf-to-primary-600 jf-px-3 jf-py-1.5 jf-text-xs jf-font-semibold jf-text-on-primary jf-shadow-sm jf-transition-all jf-duration-200 disabled:jf-opacity-60"
+          className="jf-inline-flex jf-items-center jf-gap-1 jf-rounded-md jf-bg-primary-600 jf-px-3 jf-py-1.5 jf-text-xs jf-font-semibold jf-text-on-primary jf-shadow-sm jf-transition-all jf-duration-200 hover:jf-bg-primary-700 disabled:jf-opacity-60"
         >
           {label}
         </button>

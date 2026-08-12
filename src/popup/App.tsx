@@ -1,6 +1,7 @@
 import { Badge } from "@/shared/components/Badge";
 import { AuthPanel } from "./AuthPanel";
 import { TrackerPanel } from "./TrackerPanel";
+import { MomentumPanel } from "./MomentumPanel";
 import { SettingsPanel } from "./SettingsPanel";
 
 /**
@@ -33,6 +34,8 @@ export function App() {
         <AuthPanel />
         {/* Quick Apply Tracker (Phase 6) — hides itself when logged out */}
         <TrackerPanel />
+        {/* Momentum score (Phase 10) — real /analytics/my-stats, hidden when logged out */}
+        <MomentumPanel />
         {/* Opt-in settings (Phase 7) */}
         <SettingsPanel />
       </main>

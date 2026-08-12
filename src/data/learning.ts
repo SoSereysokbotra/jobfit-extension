@@ -29,14 +29,23 @@ async function mock(externalId: string, source: JobSource): Promise<SkillGapRepo
   return { jobExternalId: externalId, source, gaps };
 }
 
-function real(externalId: string, source: JobSource): Promise<SkillGapReport> {
+function real(
+  externalId: string,
+  source: JobSource,
+  title: string | null,
+): Promise<SkillGapReport> {
+  // Title scopes gaps to similar roles server-side; empty/null → backend returns [].
   return api.get<SkillGapReport>("/learning/gap", {
-    query: { jobExternalId: externalId, source },
+    query: { jobExternalId: externalId, source, title },
   });
 }
 
-export function getSkillGap(externalId: string, source: JobSource): Promise<SkillGapReport> {
+export function getSkillGap(
+  externalId: string,
+  source: JobSource,
+  title: string | null,
+): Promise<SkillGapReport> {
   return DATA_SOURCE.learningGap === "mock"
     ? mock(externalId, source)
-    : real(externalId, source);
+    : real(externalId, source, title);
 }

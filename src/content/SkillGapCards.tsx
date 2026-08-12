@@ -11,10 +11,9 @@ function GapCard({ gap }: { gap: SkillGap }) {
   return (
     <div className="jf-rounded-md jf-border jf-border-border jf-bg-background-secondary jf-p-2">
       <div className="jf-flex jf-items-center jf-gap-1">
-        <span aria-hidden="true">⚠️</span>
-        <span className="jf-text-xs jf-font-semibold jf-text-content">Gap: {gap.skill}</span>
+        <span className="jf-text-sm jf-font-bold jf-text-content">Gap: {gap.skill}</span>
       </div>
-      <p className="jf-mt-1 jf-text-xs jf-text-content-secondary">
+      <p className="jf-mt-1 jf-text-sm jf-text-content-secondary">
         Required by {gap.demandCount.toLocaleString()} jobs you&apos;d fit
       </p>
       <div className="jf-mt-2 jf-flex jf-flex-wrap jf-gap-1">
@@ -22,17 +21,17 @@ function GapCard({ gap }: { gap: SkillGap }) {
           <button
             type="button"
             onClick={() => openWebApp("/learning")}
-            className="jf-rounded-md jf-bg-primary-600 jf-px-2 jf-py-1 jf-text-xs jf-font-medium jf-text-on-primary jf-transition-all jf-duration-200 hover:jf-bg-primary-700"
+            className="jf-rounded-md jf-border-none jf-bg-primary-600 jf-px-5 jf-py-2 jf-text-base jf-font-bold jf-text-on-primary jf-transition-all jf-duration-200 hover:jf-bg-primary-700 hover:jf-shadow-md"
           >
-            📚 Start Learning Path · {gap.learningPath.durationWeeks}w
+            Start Learning Path · {gap.learningPath.durationWeeks}w
           </button>
         )}
         <button
           type="button"
           onClick={() => openWebApp("/jobs")}
-          className="jf-rounded-md jf-border jf-border-border jf-px-2 jf-py-1 jf-text-xs jf-font-medium jf-text-content-secondary jf-transition-all jf-duration-200 hover:jf-bg-surface-hover"
+          className="jf-rounded-md jf-border-none jf-bg-transparent jf-px-4 jf-py-2 jf-text-base jf-font-medium jf-text-content-secondary jf-transition-all jf-duration-200 hover:jf-bg-surface-hover"
         >
-          🎯 {gap.jobsWithoutSkill} jobs without {gap.skill}
+          {gap.jobsWithoutSkill} jobs without {gap.skill}
         </button>
       </div>
     </div>
@@ -42,17 +41,22 @@ function GapCard({ gap }: { gap: SkillGap }) {
 export function SkillGapCards({
   externalId,
   source,
+  role,
 }: {
   externalId: string;
   source: JobSource;
+  /** Job title — scopes gaps to similar roles server-side. */
+  role: string | null;
 }) {
   const { state, retry } = useWorkerData<SkillGapReport>(() =>
-    sendMessage({ type: "GET_SKILL_GAP", externalId, source }),
+    sendMessage({ type: "GET_SKILL_GAP", externalId, source, title: role }),
   );
 
   if (state.status === "loading") return <SkeletonLines rows={2} />;
   if (state.status === "empty")
-    return <StateNote text="No skill gaps for this role 🎉" />;
+    return (
+      <StateNote text="No skill-gap data for this role yet — JobFit compares against similar roles it has seen, and there aren't enough for this one." />
+    );
   if (state.status === "unauthenticated")
     return <StateNote text="Log in to see your skill gaps." actionLabel="Log in" onAction={openLogin} />;
   if (state.status === "error")

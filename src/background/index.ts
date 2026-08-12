@@ -10,11 +10,15 @@
 import type { ExtMessage } from "@/shared/messaging";
 import { getAuthState, logout } from "./auth";
 import {
+  createMatchReportFor,
   generateCoverLetterFor,
+  generateInterviewPrepFor,
   getApplicationsPipeline,
   getCompanyIntel,
   getDeadline,
+  getDuplicateCheck,
   getJobMatch,
+  getMomentumStats,
   getSalary,
   getSkillGapReport,
 } from "./features";
@@ -37,7 +41,7 @@ async function handle(message: ExtMessage): Promise<unknown> {
     case "GET_COMPANY_INTEL":
       return getCompanyIntel(message.name);
     case "GET_SKILL_GAP":
-      return getSkillGapReport(message.externalId, message.source);
+      return getSkillGapReport(message.externalId, message.source, message.title);
     case "GET_APPLICATIONS":
       return getApplicationsPipeline(message.limit ?? 5);
     case "GET_SALARY_INTEL":
@@ -50,6 +54,31 @@ async function handle(message: ExtMessage): Promise<unknown> {
         source: message.source,
         company: message.company,
         role: message.role,
+      });
+    case "GET_DUPLICATE_CHECK":
+      return getDuplicateCheck({
+        externalId: message.externalId,
+        source: message.source,
+        title: message.title,
+        company: message.company,
+      });
+    case "GENERATE_INTERVIEW_PREP":
+      return generateInterviewPrepFor({
+        externalId: message.externalId,
+        source: message.source,
+        company: message.company,
+        role: message.role,
+      });
+    case "GET_MOMENTUM":
+      return getMomentumStats();
+    case "CREATE_MATCH_REPORT":
+      return createMatchReportFor({
+        externalId: message.externalId,
+        source: message.source,
+        title: message.title,
+        company: message.company,
+        location: message.location,
+        jobDescription: message.jobDescription,
       });
     default: {
       // Exhaustiveness guard — a new ExtMessage without a case fails to compile.

@@ -11,13 +11,21 @@ import { getApplications } from "@/data/applications";
 import { getSalaryIntel } from "@/data/salary";
 import { getJobDeadline } from "@/data/deadlines";
 import { generateCoverLetter, type CoverLetterInput } from "@/data/generate";
+import { getDuplicateApplication, type DuplicateInput } from "@/data/duplicates";
+import { generateInterviewPrep, type InterviewInput } from "@/data/interview";
+import { getMomentum } from "@/data/momentum";
+import { createMatchReport, type MatchReportInput } from "@/data/matchReport";
 import type { DataResult } from "@/shared/messaging";
 import type {
   CompanyIntel,
   CoverLetter,
+  DuplicateMatch,
+  InterviewPrep,
   JobDeadline,
   JobMatch,
   JobSource,
+  MatchReportRef,
+  MomentumStats,
   SalaryIntel,
   SkillGapReport,
   TrackedApplication,
@@ -58,9 +66,10 @@ export function getCompanyIntel(name: string): Promise<DataResult<CompanyIntel>>
 export function getSkillGapReport(
   externalId: string,
   source: JobSource,
+  title: string | null,
 ): Promise<DataResult<SkillGapReport>> {
   return toResult(
-    () => getSkillGap(externalId, source),
+    () => getSkillGap(externalId, source, title),
     (report) => report.gaps.length === 0,
   );
 }
@@ -98,4 +107,35 @@ export function getDeadline(
   // A job with no deadline is still a valid "ok" result (deadline: null); the UI
   // decides whether to render the chip.
   return toResult(() => getJobDeadline(externalId, source));
+}
+
+export function getDuplicateCheck(
+  input: DuplicateInput,
+): Promise<DataResult<DuplicateMatch>> {
+  // null → empty (no prior application) → the UI shows nothing.
+  return toResult(() => getDuplicateApplication(input));
+}
+
+export function generateInterviewPrepFor(
+  input: InterviewInput,
+): Promise<DataResult<InterviewPrep>> {
+  return toResult(
+    () => generateInterviewPrep(input),
+    (prep) => prep.topQuestions.length === 0,
+  );
+}
+
+export function getMomentumStats(): Promise<DataResult<MomentumStats>> {
+  return toResult(() => getMomentum());
+}
+
+export function createMatchReportFor(
+  input: MatchReportInput,
+): Promise<DataResult<MatchReportRef>> {
+  // A report with no id is nothing to open, so treat it as empty rather than
+  // sending the user to /match-report/undefined.
+  return toResult(
+    () => createMatchReport(input),
+    (report) => report.id.trim().length === 0,
+  );
 }
