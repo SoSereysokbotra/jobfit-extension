@@ -15,6 +15,8 @@ import type {
   MatchReportRef,
   MomentumStats,
   SalaryIntel,
+  SavedJob,
+  SaveJobInput,
   SkillGapReport,
   TrackedApplication,
 } from "./types";
@@ -90,7 +92,9 @@ export type ExtMessage =
        * job's requirements from it and stores only the derived report.
        */
       jobDescription: string;
-    };
+    }
+  | ({ type: "SAVE_JOB" } & SaveJobInput)
+  | { type: "GET_SAVED_JOB"; externalId: string; source: JobSource };
 
 /** Response shape per message type. */
 export interface ExtResponseMap {
@@ -107,6 +111,8 @@ export interface ExtResponseMap {
   GENERATE_INTERVIEW_PREP: DataResult<InterviewPrep>;
   GET_MOMENTUM: DataResult<MomentumStats>;
   CREATE_MATCH_REPORT: DataResult<MatchReportRef>;
+  SAVE_JOB: DataResult<SavedJob>;
+  GET_SAVED_JOB: DataResult<SavedJob>;
 }
 
 type MessageOf<T extends ExtMessage["type"]> = Extract<ExtMessage, { type: T }>;

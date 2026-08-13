@@ -20,7 +20,9 @@ import {
   getJobMatch,
   getMomentumStats,
   getSalary,
+  getSavedJobFor,
   getSkillGapReport,
+  saveJobFor,
 } from "./features";
 import { registerAlarmHandlers, setupAlarms } from "./alarms";
 
@@ -71,6 +73,19 @@ async function handle(message: ExtMessage): Promise<unknown> {
       });
     case "GET_MOMENTUM":
       return getMomentumStats();
+    case "SAVE_JOB":
+      return saveJobFor({
+        externalId: message.externalId,
+        source: message.source,
+        title: message.title,
+        company: message.company,
+        description: message.description,
+        url: message.url,
+        salary: message.salary,
+        notes: message.notes,
+      });
+    case "GET_SAVED_JOB":
+      return getSavedJobFor(message.externalId, message.source);
     case "CREATE_MATCH_REPORT":
       return createMatchReportFor({
         externalId: message.externalId,

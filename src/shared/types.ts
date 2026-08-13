@@ -238,6 +238,41 @@ export interface MatchReportRef {
   id: string;
 }
 
+// ─── P4 · Save Job (POST /saved-jobs/external) ──────────────────────────────
+/**
+ * A job the user saved from the badge's "Save Job" form. Mirrors the backend's
+ * SavedExternalJobDto.
+ *
+ * PRIVACY: like the match report, this carries the posting text — but only what
+ * the USER chose to save, on their own row, on their click. It is a bookmark,
+ * not a feed: nothing reads across users and no background job writes it.
+ */
+export interface SavedJob {
+  id: string;
+  source: JobSource;
+  externalId: string;
+  title: string;
+  company: string | null;
+  description: string | null;
+  url: string | null;
+  /** Free text — postings write "$70k–90k", "1,200 USD/month", "negotiable". */
+  salary: string | null;
+  notes: string | null;
+  savedAt: string;
+}
+
+/** What the form sends. `title` is the only required field, as on the form. */
+export interface SaveJobInput {
+  externalId: string;
+  source: JobSource;
+  title: string;
+  company: string | null;
+  description: string | null;
+  url: string | null;
+  salary: string | null;
+  notes: string | null;
+}
+
 // ─── Extension settings (chrome.storage.local) ──────────────────────────────
 export interface ExtSettings {
   /** Opt-in browser notifications for approaching saved-job deadlines. */

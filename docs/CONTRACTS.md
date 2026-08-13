@@ -345,3 +345,52 @@ content word), so the tables rank by what the job actually emphasises.
 > datable entries it falls back to the count and says so — `basis: "CV_DEPTH"`, which the
 > UI labels "CV depth" rather than "Experience". The badge (`/recommendations/by-job`) has
 > no description, so it is always CV depth.
+
+---
+
+## P4 · Save Job — `POST /saved-jobs/external` (+ `GET`, `DELETE`)
+
+Powers the badge's **Save Job** form (2026-08-13): a bookmark of a posting on a site we
+don't ingest, with the fields the user can edit before saving.
+
+> **NOT the web app's `/saved-jobs`.** That route keys on an internal `jobId` — a foreign
+> key to our own `jobs` table — which a LinkedIn posting will never have. Faking `Job`
+> rows would feed invented postings into recommendations and the matching batch, so
+> external saves get their own table (`saved_external_jobs`).
+
+> **Privacy.** Like the match report, this carries the posting text — but only what the
+> USER chose to save, on their click, onto their own row. Re-saving the same posting
+> UPDATES it (unique on `userId + source + externalId`), so Save twice = correct the
+> salary, not a duplicate.
+
+**POST body** (all whitelisted in `SaveExternalJobDto`; only `externalId`, `source` and
+`title` are required):
+```jsonc
+{
+  "externalId": "4207112233",
+  "source": "linkedin",
+  "title": "Interpreter — Khmer speaking (Work from home)",
+  "company": "TP",
+  "description": "About the job…",       // prefilled from the page, editable
+  "url": "https://www.linkedin.com/jobs/view/4207112233",
+  "salary": "$70k–90k",                  // FREE TEXT — postings write anything
+  "notes": "Ask about the night shift"
+}
+```
+
+**200 →** `data`: the saved job.
+```jsonc
+{
+  "id": "uuid", "source": "linkedin", "externalId": "…",
+  "title": "…", "company": "…", "description": "…", "url": "…",
+  "salary": null, "notes": null,
+  "savedAt": "2026-08-13T09:00:00.000Z"
+}
+```
+
+Also:
+- `GET /saved-jobs/external` → `data`: the user's saved jobs, newest first.
+- `GET /saved-jobs/external/lookup?source=&externalId=` → `data`: the saved copy, or
+  **`null`** when this posting isn't saved (the form opens blank rather than erroring).
+- `DELETE /saved-jobs/external/{id}` → `data`: `{ "removed": true }`. Scoped to the owner
+  in the WHERE clause, so a guessed id can't reach another account's row.

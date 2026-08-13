@@ -17,6 +17,7 @@ import { SalaryPanel } from "./SalaryPanel";
 import { CoverLetterPanel } from "./CoverLetterPanel";
 import { DuplicateWarning } from "./DuplicateWarning";
 import { InterviewPrepPanel } from "./InterviewPrepPanel";
+import { SaveJobPanel } from "./SaveJobPanel";
 
 interface Props {
   externalId: string;
@@ -225,6 +226,7 @@ export function JobFitApp({
 }: Props) {
   const [expanded, setExpanded] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [saveOpen, setSaveOpen] = useState(false);
   const { state, retry } = useWorkerData<JobMatch>(() =>
     sendMessage({
       type: "GET_JOB_MATCH",
@@ -279,8 +281,18 @@ export function JobFitApp({
                   Company
                 </button>
               )}
-              {/* Needs a title: it's what the report is a report ABOUT, and the
-                  backend requires it to extract the job's requirements. */}
+              {/* Both need a title: it's what the report is ABOUT, and what the
+                  save form requires. */}
+              {role && (
+                <button
+                  type="button"
+                  onClick={() => setSaveOpen((v) => !v)}
+                  aria-expanded={saveOpen}
+                  className="jf-rounded-md jf-border-none jf-bg-transparent jf-px-4 jf-py-2 jf-text-base jf-font-medium jf-text-primary-600 jf-transition-all jf-duration-200 hover:jf-bg-surface-hover"
+                >
+                  {saveOpen ? "Close" : "Save Job"}
+                </button>
+              )}
               {role && (
                 <FullReportButton
                   externalId={externalId}
@@ -293,6 +305,17 @@ export function JobFitApp({
               )}
             </div>
           </div>
+
+          {saveOpen && role && (
+            <SaveJobPanel
+              externalId={externalId}
+              source={source}
+              title={role}
+              company={company}
+              getDescription={getDescription}
+              onClose={() => setSaveOpen(false)}
+            />
+          )}
 
           <MatchDetails state={state} onRetry={retry} />
 

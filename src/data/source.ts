@@ -19,6 +19,7 @@ export const DATA_SOURCE: {
   interview: Source;
   momentum: Source;
   matchReport: Source;
+  savedJobs: Source;
 } = {
   // GET /recommendations/by-job — REAL. Verified against jobfit-backend
   // (matching.controller `@Get('by-job')`): query + response + 204→empty match the
@@ -68,6 +69,11 @@ export const DATA_SOURCE: {
   // {WEB_APP_URL}/match-report/{id}. Ungated. Flip to "mock" to exercise the
   // button's loading/error states without a backend (it returns a dead id).
   matchReport: "real",
+  // POST/GET /saved-jobs/external — REAL (routes built 2026-08-13). The badge's
+  // "Save Job" form: company, title, description, URL, salary, notes, stored on
+  // the user's own row. Separate from the web app's /saved-jobs, which keys on an
+  // internal jobId a LinkedIn posting will never have. Ungated.
+  savedJobs: "real",
 };
 
 /** Shared helpers for mock adapters. */

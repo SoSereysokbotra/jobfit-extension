@@ -15,6 +15,7 @@ import { getDuplicateApplication, type DuplicateInput } from "@/data/duplicates"
 import { generateInterviewPrep, type InterviewInput } from "@/data/interview";
 import { getMomentum } from "@/data/momentum";
 import { createMatchReport, type MatchReportInput } from "@/data/matchReport";
+import { getSavedJob, saveJob } from "@/data/savedJobs";
 import type { DataResult } from "@/shared/messaging";
 import type {
   CompanyIntel,
@@ -27,6 +28,8 @@ import type {
   MatchReportRef,
   MomentumStats,
   SalaryIntel,
+  SavedJob,
+  SaveJobInput,
   SkillGapReport,
   TrackedApplication,
 } from "@/shared/types";
@@ -127,6 +130,18 @@ export function generateInterviewPrepFor(
 
 export function getMomentumStats(): Promise<DataResult<MomentumStats>> {
   return toResult(() => getMomentum());
+}
+
+export function saveJobFor(input: SaveJobInput): Promise<DataResult<SavedJob>> {
+  return toResult(() => saveJob(input));
+}
+
+export function getSavedJobFor(
+  externalId: string,
+  source: JobSource,
+): Promise<DataResult<SavedJob>> {
+  // Not saved yet → null → empty, which the form reads as "this is a new save".
+  return toResult(() => getSavedJob(externalId, source));
 }
 
 export function createMatchReportFor(

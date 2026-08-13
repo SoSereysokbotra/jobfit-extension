@@ -5,7 +5,7 @@
 > Related: [`extension_build_plan.md`](./extension_build_plan.md) (original brief),
 > [`CONTRACTS.md`](./CONTRACTS.md) (request/response specs), [`../README.md`](../README.md).
 
-_Last updated: 2026-08-12_
+_Last updated: 2026-08-13_
 
 ---
 
@@ -44,6 +44,7 @@ enumerated — not assumed):
 | Duplicate detector | 10 | `GET /applications/similar` | **real** | ✅ **route BUILT 2026-08-10** — matches the user's prior applications by company (exact, case-insensitive) + title (contains). No match → warning hidden. |
 | Scout alerts | 11 | `GET /recommendations/scout` | **real** | ✅ **route BUILT 2026-08-10** — user's recommendations ≥ minScore (optionally newer than `since`); internal jobs link to the web app, ingested to their apply URL. |
 | Cover letter (Easy Apply auto-fill) | 9 | *(DOM inject, no endpoint)* | n/a | ⚠️ fragile DOM — test separately (§5) |
+| Save Job (badge form) | — | `POST/GET/DELETE /saved-jobs/external` | **real** | ✅ **routes BUILT 2026-08-13** (`jobfit-backend` saved-job module, `saved_external_jobs` table). Prefilled form (title/company/description/URL) + salary + notes. Separate from the web app's `/saved-jobs`, which needs an internal `jobId` a LinkedIn post never has. Re-saving updates, never duplicates. **Second route that receives posting text** — see §5. |
 | Full-page match report | — | `POST /match-report`, `GET /match-report/:id` | **real** | ✅ **module BUILT 2026-08-12** (`jobfit-backend/src/modules/match-report`) — composes résumé ATS/quality + external match + AI-extracted requirements matched against the résumé; stores the payload, returns `{id}`. Web page: `jobfit-frontend` `/(seeker)/match-report/[id]`. **The one route that receives the posting text** (Option A — see §5). |
 
 **Not built (never in the phase plan):** Indeed site adapter · Recruiter Radar ·
