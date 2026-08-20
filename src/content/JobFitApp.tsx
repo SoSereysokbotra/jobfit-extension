@@ -5,7 +5,7 @@
  *   - Phase 5: skills-gap action cards (under the badge)
  *   - Phase 4: company intelligence sidebar (opened from the badge)
  */
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { sendMessage } from "@/shared/messaging";
 import type { JobDeadline, JobMatch, JobSource } from "@/shared/types";
 import type { Loadable } from "./useWorkerData";
@@ -18,6 +18,7 @@ import { CoverLetterPanel } from "./CoverLetterPanel";
 import { DuplicateWarning } from "./DuplicateWarning";
 import { InterviewPrepPanel } from "./InterviewPrepPanel";
 import { SaveJobPanel } from "./SaveJobPanel";
+import { AnchoredOverlay, FullscreenOverlay } from "./OverlayLayer";
 
 interface Props {
   externalId: string;
@@ -124,6 +125,9 @@ function MatchDetails({
   );
 }
 
+/** Panel width in px. The overlay needs the number to keep itself on screen. */
+const PANEL_WIDTH = 480;
+
 /** Idle → building → (new tab | a reason it couldn't). */
 type ReportState =
   | { status: "idle" }
@@ -200,7 +204,7 @@ function FullReportButton({
         type="button"
         onClick={() => void build()}
         disabled={state.status === "building"}
-        className="jf-rounded-md jf-border-none jf-bg-primary-600 jf-px-5 jf-py-2 jf-text-base jf-font-bold jf-text-on-primary jf-transition-all jf-duration-200 hover:jf-bg-primary-700 hover:jf-shadow-md disabled:jf-opacity-60"
+        className="jf-rounded-md jf-border-none jf-bg-primary-600 jf-px-4 jf-py-1.5 jf-text-sm jf-font-bold jf-text-on-primary jf-transition-all jf-duration-200 hover:jf-bg-primary-700 hover:jf-shadow-md disabled:jf-opacity-60"
       >
         {state.status === "building" ? "Building…" : "Full Report"}
       </button>
@@ -227,6 +231,8 @@ export function JobFitApp({
   const [expanded, setExpanded] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [saveOpen, setSaveOpen] = useState(false);
+  // The badge is what the panel is positioned from, once it renders in the page.
+  const badgeRef = useRef<HTMLButtonElement>(null);
   const { state, retry } = useWorkerData<JobMatch>(() =>
     sendMessage({
       type: "GET_JOB_MATCH",
@@ -246,10 +252,11 @@ export function JobFitApp({
   return (
     <div className="jf-relative jf-inline-flex jf-items-center jf-gap-1 jf-font-sans">
       <button
+        ref={badgeRef}
         type="button"
         onClick={() => setExpanded((v) => !v)}
         aria-expanded={expanded}
-        className="jf-inline-flex jf-border-none jf-items-center jf-gap-2 jf-rounded-full jf-bg-primary-600 jf-px-5 jf-py-2 jf-text-base jf-font-bold jf-text-on-primary jf-shadow-md jf-transition-all jf-duration-200 hover:jf-bg-primary-700 hover:jf-shadow-lg hover:-jf-translate-y-0.5"
+        className="jf-inline-flex jf-border-none jf-items-center jf-gap-2 jf-rounded-full jf-bg-primary-600 jf-px-4 jf-py-1.5 jf-text-sm jf-font-bold jf-text-on-primary jf-shadow-md jf-transition-all jf-duration-200 hover:jf-bg-primary-700 hover:jf-shadow-lg hover:-jf-translate-y-0.5"
       >
 
         <span>JobFit{label ? ` ${label}` : ""}</span>
@@ -258,8 +265,11 @@ export function JobFitApp({
 
       <DeadlineChip state={deadline.state} />
 
+      {/* Rendered OUTSIDE this element on purpose: the badge sits inside the page's own
+          job card, and on Khmer24 that card clips its overflow — which sliced the panel
+          off. See OverlayLayer. */}
       {expanded && (
-        <div className="jf-absolute jf-left-0 jf-top-full jf-z-50 jf-mt-2 jf-w-80 jf-rounded-xl jf-border jf-border-border jf-bg-card jf-p-4 jf-shadow-2xl">
+        <AnchoredOverlay anchor={badgeRef.current} width={PANEL_WIDTH}>
           <DuplicateWarning
             externalId={externalId}
             source={source}
@@ -276,7 +286,7 @@ export function JobFitApp({
                 <button
                   type="button"
                   onClick={() => setSidebarOpen(true)}
-                  className="jf-rounded-md jf-border-none jf-bg-transparent jf-px-4 jf-py-2 jf-text-base jf-font-medium jf-text-primary-600 jf-transition-all jf-duration-200 hover:jf-bg-surface-hover"
+                  className="jf-rounded-md jf-border-none jf-bg-transparent jf-px-3 jf-py-1.5 jf-text-sm jf-font-medium jf-text-primary-600 jf-transition-all jf-duration-200 hover:jf-bg-surface-hover"
                 >
                   Company
                 </button>
@@ -288,7 +298,7 @@ export function JobFitApp({
                   type="button"
                   onClick={() => setSaveOpen((v) => !v)}
                   aria-expanded={saveOpen}
-                  className="jf-rounded-md jf-border-none jf-bg-transparent jf-px-4 jf-py-2 jf-text-base jf-font-medium jf-text-primary-600 jf-transition-all jf-duration-200 hover:jf-bg-surface-hover"
+                  className="jf-rounded-md jf-border-none jf-bg-transparent jf-px-3 jf-py-1.5 jf-text-sm jf-font-medium jf-text-primary-600 jf-transition-all jf-duration-200 hover:jf-bg-surface-hover"
                 >
                   {saveOpen ? "Close" : "Save Job"}
                 </button>
@@ -319,7 +329,7 @@ export function JobFitApp({
 
           <MatchDetails state={state} onRetry={retry} />
 
-          <div className="jf-my-3 jf-border-t jf-border-border" />
+          <div className="jf-my-2.5 jf-border-t jf-border-border" />
 
           <span className="jf-mb-2 jf-block jf-text-sm jf-font-bold jf-uppercase jf-tracking-wider jf-text-content-tertiary">
             Skill gaps
@@ -328,7 +338,7 @@ export function JobFitApp({
 
           {company && role && (
             <>
-              <div className="jf-my-3 jf-border-t jf-border-border" />
+              <div className="jf-my-2.5 jf-border-t jf-border-border" />
               <span className="jf-mb-2 jf-block jf-text-sm jf-font-bold jf-uppercase jf-tracking-wider jf-text-content-tertiary">
                 Salary
               </span>
@@ -336,22 +346,24 @@ export function JobFitApp({
             </>
           )}
 
-          <div className="jf-my-3 jf-border-t jf-border-border" />
+          <div className="jf-my-2.5 jf-border-t jf-border-border" />
           <span className="jf-mb-2 jf-block jf-text-sm jf-font-bold jf-uppercase jf-tracking-wider jf-text-content-tertiary">
             Cover letter
           </span>
           <CoverLetterPanel ctx={{ externalId, source, company, role }} />
 
-          <div className="jf-my-3 jf-border-t jf-border-border" />
+          <div className="jf-my-2.5 jf-border-t jf-border-border" />
           <span className="jf-mb-2 jf-block jf-text-sm jf-font-bold jf-uppercase jf-tracking-wider jf-text-content-tertiary">
             Interview prep
           </span>
           <InterviewPrepPanel externalId={externalId} source={source} company={company} role={role} />
-        </div>
+        </AnchoredOverlay>
       )}
 
       {sidebarOpen && company && (
-        <CompanySidebar name={company} onClose={() => setSidebarOpen(false)} />
+        <FullscreenOverlay>
+          <CompanySidebar name={company} onClose={() => setSidebarOpen(false)} />
+        </FullscreenOverlay>
       )}
     </div>
   );

@@ -26,8 +26,17 @@ export interface AuthUser {
   deletedAt: string | null;
 }
 
-/** Job board a job id came from. */
-export type JobSource = "linkedin" | "indeed";
+/**
+ * Job board a job id came from. One name per site adapter — the backend takes
+ * `source` as a free string (≤32 chars), so adding one needs no backend change.
+ * See docs/MULTI_SITE_PLAN.md.
+ */
+export type JobSource =
+  | "linkedin"
+  | "indeed"
+  | "khmer24"
+  | "bongthom"
+  | "jobnet";
 
 // ─── P0 · Sub-score match (GET /recommendations/by-job) ─────────────────────
 /**

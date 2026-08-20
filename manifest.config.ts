@@ -33,10 +33,12 @@ const hostPermissions = [...new Set([originPattern(API_URL), originPattern(WEB_U
 export default defineManifest({
   manifest_version: 3,
   name: "JobFit",
-  // Store limit is 132 chars. Only claim what ships: the LinkedIn adapter is
-  // implemented; Indeed is planned (see sites/ for where it slots in).
+  // Store limit is 132 chars and the Store REJECTS an over-length description. This was
+  // 136 until 2026-08-20 — count it, do not eyeball it. Only claim what ships: all five
+  // adapters below are implemented (src/content/sites/).
+  // Keep identical to the "Short description" block in docs/STORE_LISTING.md.
   description:
-    "See your JobFit match score, sub-scores, company insights, salary data and skill gaps directly on LinkedIn job posts.",
+    "See your JobFit match score, company insights, salary and skill gaps on job posts — LinkedIn, Indeed, JobNet, Khmer24, BongThom.",
   version: pkg.version,
   icons: {
     16: "icon16.png",
@@ -58,7 +60,17 @@ export default defineManifest({
   },
   content_scripts: [
     {
-      matches: ["https://www.linkedin.com/*"],
+      // One entry per supported board (docs/MULTI_SITE_PLAN.md). `*.indeed.com`
+      // covers the country domains — kh., uk., sg. — which are separate hosts.
+      // `*.host` matches the bare host AND any subdomain, so a user landing on
+      // khmer24.com (no www) is covered as well as www.khmer24.com.
+      matches: [
+        "https://*.linkedin.com/*",
+        "https://*.khmer24.com/*",
+        "https://*.bongthom.com/*",
+        "https://*.jobnet.com.kh/*",
+        "https://*.indeed.com/*",
+      ],
       js: ["src/content/index.tsx"],
       run_at: "document_idle",
     },

@@ -14,20 +14,12 @@
  */
 import { createRoot, type Root } from "react-dom/client";
 import { createShadowHost } from "./shadow";
-import { linkedin } from "./sites/linkedin";
-import type { SiteAdapter } from "./sites/types";
+import { pickAdapter } from "./sites";
 import type { JobSource } from "@/shared/types";
 import { JobFitApp } from "./JobFitApp";
 import { syncEasyApply } from "./easyApply";
 
 const HOST_ID = "jobfit-chip-host";
-
-function pickAdapter(hostname: string): SiteAdapter | null {
-  if (hostname === "www.linkedin.com" || hostname.endsWith(".linkedin.com")) {
-    return linkedin;
-  }
-  return null;
-}
 
 const adapter = pickAdapter(location.hostname);
 

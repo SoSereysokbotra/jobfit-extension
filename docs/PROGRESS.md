@@ -220,3 +220,49 @@ npm run build      # tsc --noEmit + vite build → dist/
 ```
 Local backend must run on `:4000`, web app on `:3000`, and you must be logged in
 on the web app for the real features.
+
+---
+
+## ⚠️ Review note — 2026-08-18
+
+From an external review of all four repos —
+`jobfit-backend/docs/MENTOR_REVIEW_2026-08-18.md`. Verified with `git ls-tree`, not from docs.
+
+### 1. `savedJobs: "real"` is currently pointed at a route that does not exist on the deployed branch
+
+| Backend branch | `saved-external-job` controller | `job-tracker` module |
+|---|---|---|
+| `origin/main` @ `7c145aa` | **present** (4 files) | **absent** |
+| `feat/external-job-tracker` @ `cbcb455` | **absent** | **present** (5 files) |
+
+Both branched from `dd61b15`. The extension's Save Job needs the first; the web app's
+`/tracker` needs the second. **Whichever branch is deployed, one client 404s.** The two
+must be merged before either is shipped.
+
+Related trap: `jobfit-backend/docs/HANDOFF_2026-08-17.md` §3 records `saved_external_jobs`
+as *"1 row, no code uses it… left alone deliberately"*. That was verified on
+`feat/external-job-tracker`, where the controller is genuinely absent — it is **false on
+`main`**, and acting on it would drop the table this feature writes to.
+
+**Process fix:** the "Backend reality (verified)" column in §1 should record the **commit**
+it was verified against, not just a date. A date does not identify a tree.
+
+### 2. Two contracts are written against tables that do not exist
+
+`CONTRACTS.md` specifies `GET /salary` reading *"from `salary_data` aggregate"* and
+`GET /learning/gap` returning a `learningPath` object. Neither `salary_data` nor
+`LearningPath` exists in `schema.prisma` — they are in the (stale) ER diagram only. Both
+routes were built and both silently degrade, as §1 of this file already notes.
+
+The risk is that the **mocks are richer than the real endpoints**: a demo on mock data shows
+P25/P50/P75 bands and learning paths that the live endpoint cannot produce. Trim the mocks
+to what the real route returns, so a flag flip cannot turn a working demo into an empty
+screen.
+
+### 3. The ungated extension routes are the only working path to the paid AI
+
+`PROGRESS.md` §2 Phase C2 accepts the ungated routes as a known paywall bypass. Worth
+knowing: **nothing writes `User.subscriptionTier`** except one unguarded admin-ish endpoint,
+and there is no `Subscription`/`Payment` model at all — so no user can legitimately be
+Premium, and the extension's ungated routes are not a bypass of a working paywall, they are
+the only door. See finding #10 in the review.

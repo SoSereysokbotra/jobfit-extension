@@ -64,7 +64,7 @@ export function StateNote({
         <button
           type="button"
           onClick={onAction}
-          className="jf-self-start jf-border-none jf-rounded-md jf-bg-primary-600 jf-px-5 jf-py-2 jf-text-base jf-font-bold jf-text-on-primary jf-transition-all jf-duration-200 hover:jf-bg-primary-700 hover:jf-shadow-md"
+          className="jf-self-start jf-border-none jf-rounded-md jf-bg-primary-600 jf-px-4 jf-py-1.5 jf-text-sm jf-font-bold jf-text-on-primary jf-transition-all jf-duration-200 hover:jf-bg-primary-700 hover:jf-shadow-md"
         >
           {actionLabel}
         </button>
