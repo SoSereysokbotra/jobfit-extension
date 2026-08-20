@@ -35,9 +35,9 @@ type Status =
   | { kind: "error"; message: string };
 
 const LABEL =
-  "jf-mb-1 jf-block jf-text-sm jf-font-semibold jf-text-content-secondary";
+  "jf-mb-1 jf-block jf-text-base jf-font-semibold jf-text-content-secondary";
 const FIELD =
-  "jf-w-full jf-rounded-md jf-border jf-border-border jf-bg-card jf-px-3 jf-py-2 jf-text-sm jf-text-content jf-outline-none focus:jf-border-primary-600";
+  "jf-w-full jf-rounded-md jf-border jf-border-border jf-bg-card jf-px-3 jf-py-2 jf-text-base jf-text-content jf-outline-none focus:jf-border-primary-600";
 
 export function SaveJobPanel({
   externalId,
@@ -123,16 +123,16 @@ export function SaveJobPanel({
   }
 
   return (
-    <div className="jf-mt-2 jf-flex jf-flex-col jf-gap-2 jf-rounded-lg jf-border jf-border-border jf-bg-surface jf-p-3">
+    <div className="jf-mt-2 jf-flex jf-flex-col jf-gap-2.5 jf-rounded-lg jf-border jf-border-border jf-bg-surface jf-p-3">
       <div className="jf-flex jf-items-center jf-justify-between">
-        <span className="jf-text-sm jf-font-bold jf-text-content">
+        <span className="jf-text-base jf-font-bold jf-text-content">
           {alreadySaved ? "Update saved job" : "Save job"}
         </span>
         <button
           type="button"
           onClick={onClose}
           aria-label="Close"
-          className="jf-rounded-md jf-border-none jf-bg-transparent jf-px-1 jf-text-sm jf-text-content-tertiary hover:jf-text-content"
+          className="jf-rounded-md jf-border-none jf-bg-transparent jf-px-2 jf-py-1 jf-text-base jf-text-content-tertiary hover:jf-text-content"
         >
           ✕
         </button>
@@ -166,7 +166,7 @@ export function SaveJobPanel({
           </span>
         </label>
         <textarea
-          className={`${FIELD} jf-h-20 jf-resize-y`}
+          className={`${FIELD} jf-h-28 jf-resize-y`}
           value={form.description}
           onChange={(e) => update("description")(e.target.value)}
         />
@@ -199,7 +199,7 @@ export function SaveJobPanel({
           Notes <span className="jf-font-normal jf-text-content-tertiary">(optional)</span>
         </label>
         <textarea
-          className={`${FIELD} jf-h-12 jf-resize-y`}
+          className={`${FIELD} jf-h-20 jf-resize-y`}
           placeholder="Why this one? Who to follow up with?"
           value={form.notes}
           onChange={(e) => update("notes")(e.target.value)}
@@ -208,27 +208,27 @@ export function SaveJobPanel({
 
       {status.kind === "unauthenticated" && (
         <div className="jf-flex jf-items-center jf-gap-2">
-          <span className="jf-text-sm jf-text-content-secondary">
+          <span className="jf-text-base jf-text-content-secondary">
             Log in to JobFit to save.
           </span>
           <button
             type="button"
             onClick={openLogin}
-            className="jf-rounded-md jf-border-none jf-bg-primary-600 jf-px-2 jf-py-0.5 jf-text-sm jf-font-semibold jf-text-on-primary"
+            className="jf-rounded-md jf-border-none jf-bg-primary-600 jf-px-3 jf-py-1.5 jf-text-sm jf-font-semibold jf-text-on-primary"
           >
             Log in
           </button>
         </div>
       )}
       {status.kind === "error" && (
-        <p className="jf-text-sm jf-text-error-600">{status.message}</p>
+        <p className="jf-text-base jf-text-error-600">{status.message}</p>
       )}
 
       <div className="jf-flex jf-items-center jf-justify-end jf-gap-2">
         <button
           type="button"
           onClick={onClose}
-          className="jf-rounded-md jf-border-none jf-bg-transparent jf-px-4 jf-py-2 jf-text-base jf-font-medium jf-text-content-secondary jf-transition-all jf-duration-200 hover:jf-bg-surface-hover"
+          className="jf-rounded-md jf-border-none jf-bg-transparent jf-px-3 jf-py-1.5 jf-text-sm jf-font-medium jf-text-content-secondary jf-transition-all jf-duration-200 hover:jf-bg-surface-hover"
         >
           Cancel
         </button>
@@ -236,7 +236,7 @@ export function SaveJobPanel({
           type="button"
           onClick={() => void save()}
           disabled={status.kind === "saving" || status.kind === "saved"}
-          className="jf-rounded-md jf-border-none jf-bg-primary-600 jf-px-5 jf-py-2 jf-text-base jf-font-bold jf-text-on-primary jf-shadow-sm jf-transition-all jf-duration-200 hover:jf-bg-primary-700 hover:jf-shadow-md disabled:jf-opacity-60"
+          className="jf-rounded-md jf-border-none jf-bg-primary-600 jf-px-4 jf-py-1.5 jf-text-sm jf-font-bold jf-text-on-primary jf-shadow-sm jf-transition-all jf-duration-200 hover:jf-bg-primary-700 hover:jf-shadow-md disabled:jf-opacity-60"
         >
           {status.kind === "saving"
             ? "Saving…"

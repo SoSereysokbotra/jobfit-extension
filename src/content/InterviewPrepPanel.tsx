@@ -59,7 +59,7 @@ export function InterviewPrepPanel({
         type="button"
         onClick={() => void generate()}
         disabled={status === "loading"}
-        className="jf-inline-flex jf-border-none jf-items-center jf-gap-2 jf-self-start jf-rounded-md jf-bg-primary-600 jf-px-5 jf-py-2 jf-text-base jf-font-bold jf-text-on-primary jf-shadow-sm jf-transition-all jf-duration-200 hover:jf-bg-primary-700 hover:jf-shadow-md hover:-jf-translate-y-0.5 disabled:jf-opacity-60"
+        className="jf-inline-flex jf-border-none jf-items-center jf-gap-2 jf-self-start jf-rounded-md jf-bg-primary-600 jf-px-4 jf-py-1.5 jf-text-sm jf-font-bold jf-text-on-primary jf-shadow-sm jf-transition-all jf-duration-200 hover:jf-bg-primary-700 hover:jf-shadow-md hover:-jf-translate-y-0.5 disabled:jf-opacity-60"
       >
         {status === "loading" ? "Preparing…" : prep ? "Regenerate" : "Interview prep"}
       </button>
@@ -70,7 +70,7 @@ export function InterviewPrepPanel({
           <button
             type="button"
             onClick={openLogin}
-            className="jf-rounded-md jf-border-none jf-bg-transparent jf-px-4 jf-py-2 jf-text-base jf-font-medium jf-text-primary-600 jf-transition-all jf-duration-200 hover:jf-bg-surface-hover"
+            className="jf-rounded-md jf-border-none jf-bg-transparent jf-px-3 jf-py-1.5 jf-text-sm jf-font-medium jf-text-primary-600 jf-transition-all jf-duration-200 hover:jf-bg-surface-hover"
           >
             Log in
           </button>

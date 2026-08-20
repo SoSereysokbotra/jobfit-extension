@@ -132,7 +132,7 @@ export function CompanySidebar({ name, onClose }: { name: string; onClose: () =>
         aria-modal="true"
         aria-label={`Company intel for ${name}`}
         style={{ zIndex: 2147483647 }}
-        className="jf-fixed jf-right-0 jf-top-0 jf-flex jf-h-screen jf-w-80 jf-flex-col jf-gap-3 jf-overflow-y-auto jf-bg-card jf-p-4 jf-font-sans jf-shadow-xl"
+        className="jf-fixed jf-right-0 jf-top-0 jf-flex jf-h-screen jf-w-96 jf-flex-col jf-gap-3 jf-overflow-y-auto jf-bg-card jf-p-4 jf-font-sans jf-shadow-xl"
       >
         <div className="jf-flex jf-items-center jf-justify-between">
           <h2 className="jf-truncate jf-text-base jf-font-bold jf-text-content" title={name}>

@@ -21,7 +21,7 @@ function GapCard({ gap }: { gap: SkillGap }) {
           <button
             type="button"
             onClick={() => openWebApp("/learning")}
-            className="jf-rounded-md jf-border-none jf-bg-primary-600 jf-px-5 jf-py-2 jf-text-base jf-font-bold jf-text-on-primary jf-transition-all jf-duration-200 hover:jf-bg-primary-700 hover:jf-shadow-md"
+            className="jf-rounded-md jf-border-none jf-bg-primary-600 jf-px-4 jf-py-1.5 jf-text-sm jf-font-bold jf-text-on-primary jf-transition-all jf-duration-200 hover:jf-bg-primary-700 hover:jf-shadow-md"
           >
             Start Learning Path · {gap.learningPath.durationWeeks}w
           </button>
@@ -29,7 +29,7 @@ function GapCard({ gap }: { gap: SkillGap }) {
         <button
           type="button"
           onClick={() => openWebApp("/jobs")}
-          className="jf-rounded-md jf-border-none jf-bg-transparent jf-px-4 jf-py-2 jf-text-base jf-font-medium jf-text-content-secondary jf-transition-all jf-duration-200 hover:jf-bg-surface-hover"
+          className="jf-rounded-md jf-border-none jf-bg-transparent jf-px-3 jf-py-1.5 jf-text-sm jf-font-medium jf-text-content-secondary jf-transition-all jf-duration-200 hover:jf-bg-surface-hover"
         >
           {gap.jobsWithoutSkill} jobs without {gap.skill}
         </button>

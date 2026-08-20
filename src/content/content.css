@@ -14,3 +14,31 @@
 *::after {
   box-sizing: border-box;
 }
+
+/* A readable baseline for anything without an explicit text-* class.
+   Not inherited from the page: LinkedIn's font-size would come with it. */
+:host {
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+/* FORM CONTROLS DO NOT INHERIT FONT. That is normally preflight's job, and
+   preflight is off here by design (it would emit a global reset). Without this,
+   the browser's own defaults apply — roughly 13px Arial for <input>, and a
+   MONOSPACE face for <textarea>, which is why the Save Job description box
+   rendered smaller and in the wrong typeface than everything around it. */
+input,
+textarea,
+select,
+button {
+  font: inherit;
+  color: inherit;
+  letter-spacing: inherit;
+}
+
+/* Placeholders inherit the field's size but should read as secondary. */
+input::placeholder,
+textarea::placeholder {
+  color: var(--color-text-tertiary);
+  opacity: 1;
+}
