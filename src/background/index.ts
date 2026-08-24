@@ -25,6 +25,7 @@ import {
   saveJobFor,
 } from "./features";
 import { registerAlarmHandlers, setupAlarms } from "./alarms";
+import { purgeLegacyUnscopedState } from "./account";
 
 async function handle(message: ExtMessage): Promise<unknown> {
   switch (message.type) {
@@ -104,7 +105,14 @@ async function handle(message: ExtMessage): Promise<unknown> {
 }
 
 // Deadline-reminder alarm lifecycle (Phase 7).
-chrome.runtime.onInstalled.addListener(() => setupAlarms());
+chrome.runtime.onInstalled.addListener(() => {
+  setupAlarms();
+  // One-time cleanup for profiles upgraded from a build whose alert state was
+  // shared across every JobFit account on this browser. See
+  // @/shared/storageKeys `LEGACY_UNSCOPED_KEYS` for why it is dropped, not
+  // migrated.
+  void purgeLegacyUnscopedState();
+});
 chrome.runtime.onStartup.addListener(() => setupAlarms());
 registerAlarmHandlers();
 

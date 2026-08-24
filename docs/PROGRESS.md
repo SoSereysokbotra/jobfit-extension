@@ -3,7 +3,8 @@
 > **Living document.** Update this BEFORE and AFTER each work session so anyone
 > (including a fresh AI session) can resume without re-deriving context.
 > Related: [`extension_build_plan.md`](./extension_build_plan.md) (original brief),
-> [`CONTRACTS.md`](./CONTRACTS.md) (request/response specs), [`../README.md`](../README.md).
+> [`CONTRACTS.md`](./CONTRACTS.md) (request/response specs), [`MENTOR_REVIEW.md`](./MENTOR_REVIEW.md)
+> (hidden product/system assumptions), [`../README.md`](../README.md).
 
 _Last updated: 2026-08-13_
 

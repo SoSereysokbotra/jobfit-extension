@@ -18,6 +18,7 @@ import { pickAdapter } from "./sites";
 import type { JobSource } from "@/shared/types";
 import { JobFitApp } from "./JobFitApp";
 import { syncEasyApply } from "./easyApply";
+import { normalizeCompany, normalizeLocation, normalizeTitle } from "./sites/normalize";
 
 const HOST_ID = "jobfit-chip-host";
 
@@ -51,10 +52,14 @@ function mount(anchor: HTMLElement, jobId: string): void {
 
   anchor.insertAdjacentElement("afterend", host);
   root = createRoot(mountPoint);
-  // Company + title are read once at mount for LOCAL use (sidebar/salary) — never sent.
-  const company = adapter?.getCompany() ?? null;
-  const role = adapter?.getTitle() ?? null;
-  const location = adapter?.getLocation() ?? null;
+  // Read once at mount and NORMALISED here, at the boundary between someone
+  // else's DOM and our data: whitespace collapsed, invisible characters
+  // dropped, length capped. These three are identifiers and DO leave the page
+  // (they are what the match endpoint scores); the posting body does not — see
+  // getDescription below.
+  const company = normalizeCompany(adapter?.getCompany() ?? null);
+  const role = normalizeTitle(adapter?.getTitle() ?? null);
+  const location = normalizeLocation(adapter?.getLocation() ?? null);
   root.render(
     <JobFitApp
       externalId={jobId}

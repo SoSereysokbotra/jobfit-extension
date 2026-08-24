@@ -15,6 +15,7 @@
  * back to the externally_connectable bridge (option C).
  */
 import { api, ApiError, resetRefreshLatch, setAccessToken } from "./api";
+import { forgetActiveUser, getStoredActiveUser, handOffDevice, setActiveUser } from "./account";
 import type { AuthState } from "@/shared/messaging";
 import type { AuthUser } from "@/shared/types";
 
@@ -42,6 +43,31 @@ export async function getAuthState(): Promise<AuthState> {
   }
 }
 
+/**
+ * The signed-in user's id, or null when nobody is — performing the device
+ * handoff on the way through if the account changed since the last check.
+ *
+ * This is what every background alarm must call first. An alarm is a timer, and
+ * a timer knows nothing about sign-outs: six hours after Alice signs out her
+ * deadline alarm still fires. Null means "notify nobody".
+ *
+ * An unreachable API is NOT treated as a sign-out. It returns null so callers
+ * stay quiet, but leaves the recorded account untouched, so a flaky network
+ * can't trigger a handoff and wipe the wrong person's click-targets.
+ */
+export async function resolveActiveUser(): Promise<string | null> {
+  const auth = await getAuthState();
+  if (auth.status === "error") return null;
+
+  const current = auth.status === "authenticated" ? auth.user.id : null;
+  const previous = await getStoredActiveUser();
+  if (current === previous) return current;
+
+  await handOffDevice(previous);
+  await setActiveUser(current);
+  return current;
+}
+
 export async function logout(): Promise<{ ok: boolean }> {
   try {
     await api.post("/auth/logout", undefined, { skipRefresh: true });
@@ -49,5 +75,9 @@ export async function logout(): Promise<{ ok: boolean }> {
     // Already-expired token: the local session still has to go.
   }
   setAccessToken(null);
+  // Signing out has to take the account's device-visible traces with it: the
+  // notification click-targets and any toast still sitting in the tray. Without
+  // this, a leftover notification navigates for whoever uses the profile next.
+  await forgetActiveUser();
   return { ok: true };
 }

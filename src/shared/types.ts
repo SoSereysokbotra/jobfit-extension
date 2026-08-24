@@ -180,6 +180,14 @@ export interface UpcomingDeadline {
   title: string;
   deadline: string;
   matchScore: number | null;
+  /**
+   * The posting URL captured when the user saved the job. The notification
+   * navigates HERE — an id plus a source cannot address a Khmer24/BongThom/
+   * JobNet posting (their paths carry a slug), and guessing sent JobNet
+   * reminders to LinkedIn. Null when the saved row has no URL; see
+   * `savedJobUrl` for the fallback order.
+   */
+  url: string | null;
 }
 
 // ─── P1 · Cover letter generation (POST /generate/cover-letter) ─────────────
