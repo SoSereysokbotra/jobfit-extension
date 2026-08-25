@@ -7,13 +7,15 @@
  */
 import { useRef, useState } from "react";
 import { sendMessage } from "@/shared/messaging";
-import type { JobDeadline, JobMatch, JobSource } from "@/shared/types";
+import type { JobDeadline, JobMatch, JobSource, PostedSalary } from "@/shared/types";
 import type { Loadable } from "./useWorkerData";
+import type { Extraction } from "./sites/extraction";
+import { MatchReportPanel } from "./MatchReportPanel";
 import { useWorkerData } from "./useWorkerData";
 // `source` is a flags-only module with no imports — the content script still
 // reaches the network only through the worker.
 import { isMock, isSafeToShow } from "@/data/source";
-import { openLogin, openWebApp, ScoreBar, SkeletonLines, StateNote } from "./ui";
+import { openLogin, ScoreBar, SkeletonLines, StateNote } from "./ui";
 import { SkillGapCards } from "./SkillGapCards";
 import { CompanySidebar } from "./CompanySidebar";
 import { SalaryPanel } from "./SalaryPanel";
@@ -38,7 +40,15 @@ interface Props {
    * identifier, and reading it on mount would take it from every job the user
    * merely scrolled past.
    */
-  getDescription: () => string | null;
+  getDescription: () => Extraction | null;
+  /**
+   * The posting's OWN published experience bar in months, when the site states
+   * one as a number. Read on the same click as the description. Language-proof
+   * where reading prose is not — see SiteAdapter.getRequiredMonths.
+   */
+  getRequiredMonths: () => number | null;
+  /** Pay as the posting advertises it, read on the same click. */
+  getPostedSalary: () => PostedSalary | null;
 }
 
 /** Whole days until an ISO deadline (negative = past). */
@@ -265,103 +275,6 @@ export function MatchDetails({
 /** Panel width in px. The overlay needs the number to keep itself on screen. */
 const PANEL_WIDTH = 480;
 
-/** Idle → building → (new tab | a reason it couldn't). */
-type ReportState =
-  | { status: "idle" }
-  | { status: "building" }
-  | { status: "unauthenticated" }
-  | { status: "error"; message: string };
-
-/**
- * "📊 Full Report" — generates the roomy, full-page report on the web app.
- *
- * The badge can only ever show a number in a corner; this is the same analysis
- * with the room to explain itself. It is also the only control that sends the
- * posting text (read here, on the click, and never before).
- */
-function FullReportButton({
-  externalId,
-  source,
-  title,
-  company,
-  location,
-  getDescription,
-}: {
-  externalId: string;
-  source: JobSource;
-  title: string;
-  company: string | null;
-  location: string | null;
-  getDescription: () => string | null;
-}) {
-  const [state, setState] = useState<ReportState>({ status: "idle" });
-
-  async function build(): Promise<void> {
-    if (state.status === "building") return;
-    const jobDescription = getDescription();
-    if (!jobDescription) {
-      // LinkedIn hadn't rendered the body yet, or shipped another redesign. Say
-      // so rather than generating a report with an empty skills table in it.
-      setState({
-        status: "error",
-        message: "Couldn't read this posting's description. Scroll it into view and retry.",
-      });
-      return;
-    }
-
-    setState({ status: "building" });
-    const result = await sendMessage({
-      type: "CREATE_MATCH_REPORT",
-      externalId,
-      source,
-      title,
-      company,
-      location,
-      jobDescription,
-    });
-
-    if (result.status === "ok") {
-      setState({ status: "idle" });
-      openWebApp(`/match-report/${result.data.id}`);
-      return;
-    }
-    if (result.status === "unauthenticated") {
-      setState({ status: "unauthenticated" });
-      return;
-    }
-    setState({
-      status: "error",
-      message: result.status === "error" ? result.message : "Couldn't build the report.",
-    });
-  }
-
-  return (
-    <div className="jf-flex jf-flex-col jf-gap-1">
-      <button
-        type="button"
-        onClick={() => void build()}
-        disabled={state.status === "building"}
-        className="jf-rounded-md jf-border-none jf-bg-primary-600 jf-px-4 jf-py-1.5 jf-text-sm jf-font-bold jf-text-on-primary jf-transition-all jf-duration-200 hover:jf-bg-primary-700 hover:jf-shadow-md disabled:jf-opacity-60"
-      >
-        {state.status === "building" ? "Building…" : "Full Report"}
-      </button>
-      {/* The one result that reads the advert, and the only one that should be
-          described that way. */}
-      <p className="jf-max-w-40 jf-text-right jf-text-xs jf-text-content-tertiary">
-        reads this posting&apos;s description
-      </p>
-      {state.status === "unauthenticated" && (
-        <StateNote
-          text="Log in to build your report."
-          actionLabel="Log in"
-          onAction={openLogin}
-        />
-      )}
-      {state.status === "error" && <StateNote tone="error" text={state.message} />}
-    </div>
-  );
-}
-
 export function JobFitApp({
   externalId,
   source,
@@ -369,10 +282,37 @@ export function JobFitApp({
   role,
   location,
   getDescription,
+  getRequiredMonths,
+  getPostedSalary,
 }: Props) {
   const [expanded, setExpanded] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [saveOpen, setSaveOpen] = useState(false);
+  // The description is read ONLY here, on the click — never at mount. A failed
+  // read is reported instead of producing a report with an empty skills table.
+  const [report, setReport] = useState<Extraction | null>(null);
+  // Captured with the description, from the same page state the user is looking at.
+  const [requiredMonths, setRequiredMonths] = useState<number | null>(null);
+  const [postedSalary, setPostedSalary] = useState<PostedSalary | null>(null);
+  const [reportError, setReportError] = useState<string | null>(null);
+
+  function openReport(): void {
+    if (report) {
+      setReport(null);
+      return;
+    }
+    const extraction = getDescription();
+    if (!extraction) {
+      setReportError(
+        "Couldn't read this posting's description. Scroll it into view and try again.",
+      );
+      return;
+    }
+    setReportError(null);
+    setRequiredMonths(getRequiredMonths());
+    setPostedSalary(getPostedSalary());
+    setReport(extraction);
+  }
   // The badge is what the panel is positioned from, once it renders in the page.
   const badgeRef = useRef<HTMLButtonElement>(null);
   const { state, retry } = useWorkerData<JobMatch>(() =>
@@ -463,17 +403,44 @@ export function JobFitApp({
                 </button>
               )}
               {role && (
-                <FullReportButton
-                  externalId={externalId}
-                  source={source}
-                  title={role}
-                  company={company}
-                  location={location}
-                  getDescription={getDescription}
-                />
+                <div className="jf-flex jf-flex-col jf-items-end jf-gap-0.5">
+                  <button
+                    type="button"
+                    onClick={() => openReport()}
+                    aria-expanded={report !== null}
+                    className="jf-rounded-md jf-border-none jf-bg-primary-600 jf-px-4 jf-py-1.5 jf-text-sm jf-font-bold jf-text-on-primary jf-transition-all jf-duration-200 hover:jf-bg-primary-700 hover:jf-shadow-md"
+                  >
+                    Full Report
+                  </button>
+                  {/* The one result that reads the advert, and the only one that
+                      should be described that way. */}
+                  <span className="jf-text-xs jf-text-content-tertiary">
+                    reads this posting&apos;s description
+                  </span>
+                </div>
               )}
             </div>
           </div>
+
+          {reportError && (
+            <div className="jf-mb-3">
+              <StateNote tone="error" text={reportError} />
+            </div>
+          )}
+
+          {report && role && (
+            <MatchReportPanel
+              externalId={externalId}
+              source={source}
+              title={role}
+              company={company}
+              location={location}
+              extraction={report}
+              requiredMonths={requiredMonths}
+              postedSalary={postedSalary}
+              onClose={() => setReport(null)}
+            />
+          )}
 
           {saveOpen && role && (
             <SaveJobPanel

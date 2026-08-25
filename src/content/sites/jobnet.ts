@@ -1,5 +1,6 @@
 import type { SiteAdapter } from "./types";
-import { findHeadingWithText, readJobPosting } from "./jsonld";
+import { findHeadingWithText, readJobPosting, type PostedSalary } from "./jsonld";
+import { cleanDescription, type Extraction } from "./extraction";
 
 /**
  * JobNet Cambodia (jobnet.com.kh) — the country's main professional job board, and the
@@ -59,9 +60,26 @@ export const jobnet: SiteAdapter = {
     return readJobPosting()?.location ?? null;
   },
 
-  getDescription(): string | null {
-    const text = readJobPosting()?.description?.trim();
-    if (!text || text.length < MIN_DESCRIPTION) return null;
-    return text.slice(0, MAX_DESCRIPTION);
+  getDescription(): Extraction | null {
+    const raw = readJobPosting()?.description?.trim();
+    if (!raw) return null;
+    const text = cleanDescription(raw, MAX_DESCRIPTION);
+    if (text.length < MIN_DESCRIPTION) return null;
+    // JobNet is entirely client-rendered; its JSON-LD is the only reliable copy
+    // of the body, and it is the site's own published contract.
+    return { text, strategy: "json-ld", via: "JobPosting.Description" };
+  },
+
+  /**
+   * The posting's own stated requirement, when it publishes one. Language-proof:
+   * a published 36 needs no reading of Khmer or English prose.
+   */
+  getRequiredMonths(): number | null {
+    return readJobPosting()?.requiredMonths ?? null;
+  },
+
+  /** Advertised pay with its period, when the site publishes it. Displayed, not scored. */
+  getSalary(): PostedSalary | null {
+    return readJobPosting()?.salary ?? null;
   },
 };

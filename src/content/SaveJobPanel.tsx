@@ -16,6 +16,7 @@ import { useEffect, useState } from "react";
 import { sendMessage } from "@/shared/messaging";
 import type { JobSource } from "@/shared/types";
 import { openLogin } from "./ui";
+import type { Extraction } from "./sites/extraction";
 
 interface Props {
   externalId: string;
@@ -23,7 +24,7 @@ interface Props {
   /** Page values, used as the initial contents of the form. */
   title: string;
   company: string | null;
-  getDescription: () => string | null;
+  getDescription: () => Extraction | null;
   onClose: () => void;
 }
 
@@ -51,7 +52,7 @@ export function SaveJobPanel({
     title,
     company: company ?? "",
     // Read once, when the form opens — the user is looking at this posting now.
-    description: getDescription() ?? "",
+    description: getDescription()?.text ?? "",
     url: window.location.href,
     salary: "",
     notes: "",

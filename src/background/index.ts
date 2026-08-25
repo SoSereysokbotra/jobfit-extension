@@ -95,6 +95,9 @@ async function handle(message: ExtMessage): Promise<unknown> {
         company: message.company,
         location: message.location,
         jobDescription: message.jobDescription,
+        extraction: message.extraction,
+        requiredMonths: message.requiredMonths,
+        postedSalary: message.postedSalary,
       });
     default: {
       // Exhaustiveness guard — a new ExtMessage without a case fails to compile.

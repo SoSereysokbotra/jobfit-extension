@@ -1,5 +1,6 @@
 import type { SiteAdapter } from "./types";
 import { readText } from "./jsonld";
+import { cleanDescription, findFirstWithSelector, type Extraction } from "./extraction";
 
 /**
  * BongThom adapter — Cambodia's long-running job announcements board.
@@ -74,14 +75,15 @@ export const bongthom: SiteAdapter = {
     return match?.[1]?.replace(/\s+/g, " ").trim() || null;
   },
 
-  getDescription(): string | null {
+  getDescription(): Extraction | null {
     // innerText keeps the posting's line breaks (the extractor reads bullets much
     // better than one run-on paragraph); textContent is the fallback where innerText
     // is unavailable, which is also what makes this testable outside a browser.
-    const raw = readText(firstMatch(DESCRIPTION_SELECTORS));
-    if (!raw) return null;
-    const cleaned = raw.replace(/[ \t]+/g, " ").replace(/\n{3,}/g, "\n\n").trim();
-    if (cleaned.length < 80) return null;
-    return cleaned.slice(0, 8000);
+    const found = findFirstWithSelector(DESCRIPTION_SELECTORS);
+    const raw = found ? readText(found.el) : null;
+    if (!raw || !found) return null;
+    const text = cleanDescription(raw, 8000);
+    if (text.length < 80) return null;
+    return { text, strategy: "selector", via: found.selector };
   },
 };

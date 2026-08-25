@@ -69,6 +69,7 @@ export default defineManifest({
         "https://*.khmer24.com/*",
         "https://*.bongthom.com/*",
         "https://*.jobnet.com.kh/*",
+        "https://*.camhr.com/*",
         "https://*.indeed.com/*",
       ],
       js: ["src/content/index.tsx"],

@@ -36,7 +36,8 @@ export type JobSource =
   | "indeed"
   | "khmer24"
   | "bongthom"
-  | "jobnet";
+  | "jobnet"
+  | "camhr";
 
 // ─── P0 · Sub-score match (GET /recommendations/by-job) ─────────────────────
 /**
@@ -188,6 +189,44 @@ export interface UpcomingDeadline {
    * `savedJobUrl` for the fallback order.
    */
   url: string | null;
+}
+
+/**
+ * How the posting text that produced a report was obtained.
+ *
+ * Stored WITH the report so "where did this come from?" stays answerable after
+ * the page has changed. Without it, an odd report can only be explained by
+ * re-running the adapter against a posting that may have been edited, reused or
+ * taken down — which is no explanation at all. See content/sites/extraction.ts.
+ */
+/**
+ * Pay as the POSTING advertises it, with its period.
+ *
+ * DISPLAYED, NOT SCORED. The candidate's expected salary is stored as a bare
+ * integer with no period (`Profile.minSalary`), and this project's own schema
+ * note records why that matters: a Cambodian monthly figure and a US annual one
+ * are indistinguishable in the same column, and ~83% of the corpus is Cambodian
+ * where monthly is the norm. Scoring "$700/month" against an unlabelled "60000"
+ * would require inventing a unit, so the report shows the advert's own words
+ * instead. Add a period to the profile and this can become a real sub-score.
+ */
+export interface PostedSalary {
+  min: number | null;
+  max: number | null;
+  currency: string | null;
+  /** "MONTH" | "YEAR" | "HOUR" … as published. Null when the posting doesn't say. */
+  period: string | null;
+}
+
+export interface ExtractionProvenance {
+  /** "json-ld" | "selector" | "longest-paragraph". */
+  strategy: string;
+  /** The selector or property that supplied it. */
+  via: string;
+  /** Length of the text actually sent. */
+  chars: number;
+  /** True when the user corrected the extracted text before sending. */
+  edited: boolean;
 }
 
 // ─── P1 · Cover letter generation (POST /generate/cover-letter) ─────────────

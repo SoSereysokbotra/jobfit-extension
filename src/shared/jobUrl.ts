@@ -9,7 +9,8 @@
  * The honest constraint: only LinkedIn and Indeed put the whole address in the
  * id. Khmer24 (`/en/<slug>-adid-<id>`), BongThom
  * (`/job_detail/<slug>_<id>.html`) and JobNet (`/job/<slug>/<id>`) all need the
- * slug, which an id alone cannot recover. For those this returns null RATHER
+ * slug, which an id alone cannot recover. CamHR is the exception among the
+ * Cambodian boards: `/a/job/<id>` has no slug, so it rebuilds cleanly. For those this returns null RATHER
  * THAN GUESSING, and the caller falls back to something correct by construction
  * (the saved job's own stored URL, or the web app). Never invent a URL.
  */
@@ -24,6 +25,9 @@ export function jobUrlFromId(source: JobSource, externalId: string): string | nu
       return `https://www.linkedin.com/jobs/view/${id}`;
     case "indeed":
       return `https://www.indeed.com/viewjob?jk=${id}`;
+    // CamHR's path carries no slug — /a/job/10666812 addresses the posting on its own.
+    case "camhr":
+      return `https://www.camhr.com/a/job/${id}`;
     // Slug-bearing paths: not reconstructible from the id. See the note above.
     case "khmer24":
     case "bongthom":

@@ -1,5 +1,9 @@
 # Mentor Review — Hidden Product and System Assumptions
 
+> **Continuing this work?** Start with
+> [`HANDOFF_2026-08-25.md`](./HANDOFF_2026-08-25.md) — current state, open tasks, and
+> the traps that cost the most time.
+
 _Review date: 24 August 2026. Scope: all project Markdown documentation plus the
 extension implementation. This is a design review, not a claim that every item is
 already a production bug._
