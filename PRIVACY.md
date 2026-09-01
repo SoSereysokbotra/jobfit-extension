@@ -138,7 +138,6 @@ settings off stops them.
 | Permission | Why |
 |---|---|
 | `storage` | Save your alert preferences and prevent duplicate notifications |
-| `activeTab` | Act only on the job tab you are currently viewing |
 | `alarms` | Schedule the periodic deadline/scout checks (required for MV3 background work) |
 | `notifications` | Show the deadline and job-scout alerts you opted into |
 | Host access to the JobFit API | Make the API requests described above |

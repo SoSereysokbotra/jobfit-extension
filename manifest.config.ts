@@ -76,7 +76,10 @@ export default defineManifest({
       run_at: "document_idle",
     },
   ],
-  // storage: settings + notification dedupe · alarms/notifications: Phase 7 deadlines
-  permissions: ["storage", "activeTab", "alarms", "notifications"],
+  // storage: settings + notification dedupe · alarms/notifications: Phase 7 deadlines.
+  // NO `activeTab`: page access comes from `content_scripts` above, and the only
+  // chrome.tabs use is `tabs.create` (opening the login/apply URL), which needs no
+  // permission at all. An unused permission is a review question for nothing.
+  permissions: ["storage", "alarms", "notifications"],
   host_permissions: hostPermissions,
 });

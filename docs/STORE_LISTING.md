@@ -99,7 +99,6 @@ Display the signed-in user's JobFit job-match data on job pages at supported job
 | Permission | Justification to paste |
 |---|---|
 | `storage` | Stores the user's alert preferences and the IDs of jobs already notified about, so the same job is never notified twice. No personal data is stored. |
-| `activeTab` | Lets the extension act only on the job page the user is currently viewing, rather than requesting broad tab access. |
 | `alarms` | Manifest V3 service workers cannot use timers. Alarms schedule the periodic deadline and job-scout checks the user has opted into. |
 | `notifications` | Displays the deadline reminders and new-match alerts the user explicitly enabled in the extension settings. |
 | Host — JobFit API | The extension's data (match scores, company insights, salary, skill gaps, applications) is fetched from the JobFit API. This is the only server the extension contacts. |
@@ -126,12 +125,9 @@ creditworthiness.
 Everything else (health, financial, authentication information, personal communications,
 location, web history, user activity): **not collected.**
 
-> **Note on `activeTab`.** It is declared and justified above, but the five
-> `content_scripts` entries are what actually grant page access — `activeTab` is not
-> carrying the badge. If a reviewer asks why both exist, the honest answer is that
-> `activeTab` covers popup-initiated actions on the current tab. Consider dropping it if
-> nothing uses it by submission time; an unused permission is a review question you do not
-> need to invite.
+> **`activeTab` was dropped (2026-09-01).** It was verified unused: page access comes
+> entirely from the five `content_scripts` entries, and the only `chrome.tabs` calls are
+> `tabs.create` (login CTA, apply URL), which requires no permission. Do not re-add it.
 
 **Privacy policy URL:** host `PRIVACY.md` at a public URL and paste it here.
 The Web Store will not accept a submission without a reachable policy URL.
