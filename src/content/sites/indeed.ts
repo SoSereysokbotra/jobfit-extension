@@ -1,5 +1,6 @@
 import type { SiteAdapter } from "./types";
-import { readJobPosting, readText } from "./jsonld";
+import { readJobPosting, readText, type PostedSalary } from "./jsonld";
+import { cleanDescription, findFirstWithSelector, type Extraction } from "./extraction";
 
 /**
  * Indeed adapter.
@@ -81,18 +82,35 @@ export const indeed: SiteAdapter = {
     return readJobPosting()?.location ?? text(LOCATION_SELECTORS);
   },
 
-  getDescription(): string | null {
+  getDescription(): Extraction | null {
     // The rendered description first: it is what the user is actually looking at, and
     // Indeed's JSON-LD copy is sometimes truncated.
     //
     // innerText keeps the posting's line breaks (the extractor reads bullets much
     // better than one run-on paragraph); textContent is the fallback where innerText
     // is unavailable, which is also what makes this testable outside a browser.
-    const rendered = readText(firstMatch(DESCRIPTION_SELECTORS));
-    const raw = rendered?.trim() || readJobPosting()?.description || null;
+    const found = findFirstWithSelector(DESCRIPTION_SELECTORS);
+    const rendered = found ? readText(found.el)?.trim() : null;
+    const raw = rendered || readJobPosting()?.description || null;
     if (!raw) return null;
-    const cleaned = raw.replace(/[ \t]+/g, " ").replace(/\n{3,}/g, "\n\n").trim();
-    if (cleaned.length < 80) return null;
-    return cleaned.slice(0, 8000);
+    const text = cleanDescription(raw, 8000);
+    if (text.length < 80) return null;
+    // Report which of the two actually supplied the text, not which was tried.
+    return rendered && found
+      ? { text, strategy: "selector", via: found.selector }
+      : { text, strategy: "json-ld", via: "JobPosting.description" };
+  },
+
+  /**
+   * The posting's own stated requirement, when it publishes one. Language-proof:
+   * a published 36 needs no reading of Khmer or English prose.
+   */
+  getRequiredMonths(): number | null {
+    return readJobPosting()?.requiredMonths ?? null;
+  },
+
+  /** Advertised pay with its period, when the site publishes it. Displayed, not scored. */
+  getSalary(): PostedSalary | null {
+    return readJobPosting()?.salary ?? null;
   },
 };

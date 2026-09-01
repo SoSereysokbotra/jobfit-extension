@@ -8,12 +8,14 @@ import type {
   CompanyIntel,
   CoverLetter,
   DuplicateMatch,
+  ExtractionProvenance,
   InterviewPrep,
   JobDeadline,
   JobMatch,
   JobSource,
   MatchReportRef,
   MomentumStats,
+  PostedSalary,
   SalaryIntel,
   SavedJob,
   SaveJobInput,
@@ -90,8 +92,22 @@ export type ExtMessage =
        * The visible posting text. The ONE message that carries page content, and
        * only because the user clicked "Full Report": the backend extracts the
        * job's requirements from it and stores only the derived report.
+       *
+       * The user is shown this text and can correct it before it is sent, so
+       * what arrives here is what they approved — see MatchReportPanel.
        */
       jobDescription: string;
+      /** Where that text came from. See ExtractionProvenance. */
+      extraction: ExtractionProvenance;
+      /**
+       * Months of experience the POSTING ITSELF publishes as a number, or null.
+       * Sent because it is language-proof: reading "3 years" out of Khmer prose
+       * is error-prone (an age range reads identically), while a published 36 is
+       * unambiguous. The backend prefers it over parsing the description.
+       */
+      requiredMonths: number | null;
+      /** Pay as advertised, with its period. Displayed in the report, never scored. */
+      postedSalary: PostedSalary | null;
     }
   | ({ type: "SAVE_JOB" } & SaveJobInput)
   | { type: "GET_SAVED_JOB"; externalId: string; source: JobSource };

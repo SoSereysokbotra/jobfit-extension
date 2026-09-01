@@ -24,6 +24,44 @@ export interface JobPostingLd {
   description: string | null;
   /** The site's own id for the posting, when it publishes one. */
   identifier: string | null;
+  /**
+   * `experienceRequirements.monthsOfExperience`, when the site publishes it as a
+   * NUMBER. This is the one field that sidesteps language entirely: reading "3
+   * years" out of Khmer prose is hard and error-prone, while a published 36 is
+   * unambiguous in any script.
+   *
+   * VERIFIED on live Khmer24 adverts (2026-08-25): 36 on a Senior Compliance
+   * Officer (its page displays "3Year+"), and 0 / 12 / 48 / 12 / 24 / 0 across
+   * six others.
+   *
+   * ZERO IS NOT REPORTED. It appears on ads that state no requirement at all —
+   * two of those six, including one whose body never mentions experience — so a
+   * 0 cannot be told apart from "the seller left the field blank". Treating it
+   * as a satisfied 0-year bar would put a confident "you meet this" on a posting
+   * that asked nothing. Null means "not stated", which is the honest reading.
+   */
+  requiredMonths: number | null;
+  /**
+   * The pay the posting advertises, WITH its period — `{ min, max, currency, period }`.
+   *
+   * The period is not optional decoration. This project's own schema note (from a prior
+   * review) records that a bare salary integer made "a Cambodian monthly figure and a US
+   * annual figure indistinguishable in the same column", and that ~83% of the corpus is
+   * Cambodian, where MONTHLY is the norm. So the period travels with the number or the
+   * number is not worth carrying.
+   *
+   * VERIFIED on a live Khmer24 advert (2026-08-25): USD 700.00 per MONTH.
+   */
+  salary: PostedSalary | null;
+}
+
+export interface PostedSalary {
+  /** Either bound may be null — postings publish a single figure as often as a range. */
+  min: number | null;
+  max: number | null;
+  currency: string | null;
+  /** "MONTH" | "YEAR" | "HOUR" … as the site published it. Null when unstated. */
+  period: string | null;
 }
 
 /**
@@ -89,6 +127,45 @@ function addressOf(jobLocation: unknown): string | null {
   return parts.length > 0 ? parts.join(", ") : null;
 }
 
+/** A schema.org number that may arrive as a number or a numeric string. */
+function toNumber(value: unknown): number | null {
+  if (typeof value === 'number') return Number.isFinite(value) ? value : null;
+  if (typeof value === 'string') {
+    const parsed = Number(value.replace(/,/g, '').trim());
+    return Number.isFinite(parsed) ? parsed : null;
+  }
+  return null;
+}
+
+/**
+ * `baseSalary` → the advertised pay.
+ *
+ * schema.org nests the figure inside a QuantitativeValue that may carry `value`, or
+ * `minValue`/`maxValue`, plus `unitText` for the period. Khmer24 uses the single-`value`
+ * form; both are handled because a range is just as common.
+ */
+function salaryOf(baseSalary: unknown): PostedSalary | null {
+  if (!baseSalary || typeof baseSalary !== "object") return null;
+  const outer = baseSalary as Record<string, unknown>;
+  const currency = nameOf(prop(outer, "currency"));
+
+  const inner = prop(outer, "value");
+  const q =
+    inner && typeof inner === "object" ? (inner as Record<string, unknown>) : outer;
+
+  const single = toNumber(prop(q, "value"));
+  const min = toNumber(prop(q, "minValue")) ?? single;
+  const max = toNumber(prop(q, "maxValue")) ?? single;
+  if (min === null && max === null) return null;
+
+  return {
+    min,
+    max,
+    currency,
+    period: nameOf(prop(q, "unitText")),
+  };
+}
+
 /** Descriptions are published as HTML; the extractor wants readable text. */
 function toText(html: unknown): string | null {
   if (typeof html !== "string" || !html.trim()) return null;
@@ -140,6 +217,11 @@ export function readJobPosting(): JobPostingLd | null {
     if (!posting) continue;
 
     const identifier = prop(posting, "identifier");
+    const experience = prop(posting, "experienceRequirements");
+    const months =
+      experience && typeof experience === "object"
+        ? prop(experience as Record<string, unknown>, "monthsOfExperience")
+        : undefined;
     return {
       title: nameOf(prop(posting, "title")),
       company: nameOf(prop(posting, "hiringOrganization")),
@@ -156,6 +238,12 @@ export function readJobPosting(): JobPostingLd | null {
                   : null;
               })()
             : null,
+      // See the field's doc comment for why 0 is dropped rather than reported.
+      requiredMonths:
+        typeof months === "number" && Number.isFinite(months) && months > 0
+          ? months
+          : null,
+      salary: salaryOf(prop(posting, "baseSalary")),
     };
   }
   return null;

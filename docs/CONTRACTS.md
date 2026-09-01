@@ -67,7 +67,8 @@ Powers the company fit sidebar (Phase 4).
   "fundingStage": "IPO",       // string | null  (companies.fundingStage)
   "hiringVelocity": "HIGH",     // "LOW" | "MEDIUM" | "HIGH" | null
   "openRoles": 8,               // integer | null
-  "salaryRange": {              // nullable; from salary_data aggregate
+  "salaryRange": {              // nullable; AVG over jobs.minSalary/maxSalary — there is
+                                // no salary_data table and never has been (see §17 note)
     "min": 145000,
     "max": 195000,
     "currency": "USD",
@@ -82,6 +83,24 @@ Powers the company fit sidebar (Phase 4).
 **Company not found →** `204`/`404` → UI **empty** state.
 
 ---
+
+> ### ⚠️ Two shapes below describe tables that do not exist
+>
+> `MENTOR_REVIEW_2026-08-18` §17. This file was written against
+> `jobfit-backend/docs/JobFits_ER_Diagram.md`, which documented 20 tables the schema never
+> had — including **`salary_data`** and **`learning_paths`**, both named here as sources.
+> Both endpoints were built anyway and both silently degrade: `/salary` aggregates
+> `jobs.minSalary`/`maxSalary`, and `/learning/gap` returns `learningPath: null` on every
+> row, always.
+>
+> The backend diagram is now GENERATED from `schema.prisma`
+> (`scripts/generate-er-diagram.ts`), so it can no longer describe a database that does not
+> exist. Check any new contract against it — not against memory.
+>
+> **Still to do here:** the mock in `src/` returns the rich `learningPath` object, so the
+> mock is more capable than the real endpoint. That is the direction that turns a working
+> demo into an empty screen at the moment it matters, and it should be cut back to what the
+> API can actually return.
 
 ## P0 · Skills gap — `GET /learning/gap`
 
@@ -99,7 +118,8 @@ Powers the skills-gap action cards (Phase 5).
       "skill": "Kubernetes",
       "demandCount": 847,        // "required by N jobs you'd fit"
       "jobsWithoutSkill": 12,    // "see N jobs without X"
-      "learningPath": {          // null when no path exists for the skill
+      "learningPath": {          // ALWAYS null today — there is no learning_paths table.
+                                 // The catalog lives behind GET /skills/:id/learning-resources.
         "id": "lp_k8s_101",
         "title": "Kubernetes for Backend Engineers",
         "durationWeeks": 3,

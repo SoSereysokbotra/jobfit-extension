@@ -94,3 +94,37 @@ export function hashString(input: string): number {
 export function scaled(seed: number, lo: number, hi: number): number {
   return lo + (seed % (hi - lo + 1));
 }
+
+// ─── Shipping gates for still-mocked features ───────────────────────────────
+/**
+ * True in `vite dev` / a development build, false in a release build. Vite
+ * replaces this statically in every entry (worker, content script, popup), so a
+ * production bundle keeps only the dead-code-eliminated branch.
+ */
+export const IS_DEV_BUILD: boolean = import.meta.env.DEV;
+
+/** Is this feature's data fabricated rather than backend-sourced? */
+export function isMock(feature: keyof typeof DATA_SOURCE): boolean {
+  return DATA_SOURCE[feature] === "mock";
+}
+
+/**
+ * May this feature be surfaced to a user at all?
+ *
+ * WHY THIS EXISTS: a mock is a harmless development stand-in only while the
+ * person looking at it knows it is invented. `deadlines` is the case that
+ * proves it — the fixture asserts a specific closing time, and a user who
+ * believes it will rush, deprioritise, or abandon a real application. A
+ * fabricated fact the user can ACT ON is not a placeholder, it is
+ * misinformation. So mocked features are hidden outright in release builds and
+ * rendered with a visible "sample" marker in dev.
+ *
+ * Note what this deliberately does NOT gate: an empty tracker or a blank
+ * company sidebar shows the user nothing they could act on wrongly.
+ *
+ * This module imports nothing, so the content script and popup can ask the
+ * question without pulling the network layer into their bundles.
+ */
+export function isSafeToShow(feature: keyof typeof DATA_SOURCE): boolean {
+  return !isMock(feature) || IS_DEV_BUILD;
+}

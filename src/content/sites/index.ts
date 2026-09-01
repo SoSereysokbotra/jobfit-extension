@@ -11,6 +11,7 @@ import { khmer24 } from "./khmer24";
 import { bongthom } from "./bongthom";
 import { indeed } from "./indeed";
 import { jobnet } from "./jobnet";
+import { camhr } from "./camhr";
 
 /**
  * `host` is matched as an exact hostname OR as a suffix (".linkedin.com"), so country
@@ -22,6 +23,7 @@ const REGISTRY: ReadonlyArray<{ suffix: string; adapter: SiteAdapter }> = [
   { suffix: "khmer24.com", adapter: khmer24 },
   { suffix: "bongthom.com", adapter: bongthom },
   { suffix: "jobnet.com.kh", adapter: jobnet },
+  { suffix: "camhr.com", adapter: camhr },
   { suffix: "indeed.com", adapter: indeed },
 ];
 

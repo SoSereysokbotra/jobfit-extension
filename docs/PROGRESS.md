@@ -3,9 +3,10 @@
 > **Living document.** Update this BEFORE and AFTER each work session so anyone
 > (including a fresh AI session) can resume without re-deriving context.
 > Related: [`extension_build_plan.md`](./extension_build_plan.md) (original brief),
-> [`CONTRACTS.md`](./CONTRACTS.md) (request/response specs), [`../README.md`](../README.md).
+> [`CONTRACTS.md`](./CONTRACTS.md) (request/response specs), [`MENTOR_REVIEW.md`](./MENTOR_REVIEW.md)
+> (hidden product/system assumptions), [`../README.md`](../README.md).
 
-_Last updated: 2026-08-13_
+_Last updated: 2026-08-25_
 
 ---
 
@@ -47,7 +48,7 @@ enumerated — not assumed):
 | Save Job (badge form) | — | `POST/GET/DELETE /saved-jobs/external` | **real** | ✅ **routes BUILT 2026-08-13** (`jobfit-backend` saved-job module, `saved_external_jobs` table). Prefilled form (title/company/description/URL) + salary + notes. Separate from the web app's `/saved-jobs`, which needs an internal `jobId` a LinkedIn post never has. Re-saving updates, never duplicates. **Second route that receives posting text** — see §5. |
 | Full-page match report | — | `POST /match-report`, `GET /match-report/:id` | **real** | ✅ **module BUILT 2026-08-12** (`jobfit-backend/src/modules/match-report`) — composes résumé ATS/quality + external match + AI-extracted requirements matched against the résumé; stores the payload, returns `{id}`. Web page: `jobfit-frontend` `/(seeker)/match-report/[id]`. **The one route that receives the posting text** (Option A — see §5). |
 
-**Not built (never in the phase plan):** Indeed site adapter · Recruiter Radar ·
+**Not built (never in the phase plan):** Recruiter Radar ·
 Referral tracker.
 
 > **⚠️ Two things the audit changed:**
@@ -128,14 +129,13 @@ backend's shape. Both generation endpoints also need the **premium gate** resolv
       (any authenticated user can call them). Add rate-limiting later if it matters.
 
 ### Phase D — Remaining features (optional / stretch)
-- [ ] **Indeed adapter** — `src/content/sites/indeed.ts` implementing `SiteAdapter`;
-      add `https://*.indeed.com/*` to `content_scripts` matches.
+- [x] **Multi-site adapters** — Adapters built for LinkedIn, Indeed, JobNet, Khmer24, BongThom, and CamHR (`src/content/sites/`, see `MULTI_SITE_PLAN.md`).
 - [ ] **Recruiter Radar** — "you know someone here" from `contact_persons`.
 - [ ] **Referral tracker** — from `referrals`.
 
 ### Phase E — Ship to the Chrome Web Store
 - [ ] Real screenshots + promo tiles.
-- [ ] Privacy policy page (what leaves the page: only `externalId` + `source`).
+- [ ] Privacy policy page (see `PRIVACY.md`: identifiers sent while browsing; posting text sent only on Full Report / Save Job).
 - [ ] Store listing copy + categories.
 - [ ] Point `VITE_API_URL` / `host_permissions` at the **production** API origin.
 - [ ] `npm run build` → zip `dist/` → upload → review.

@@ -1,3 +1,6 @@
+import type { Extraction } from "./extraction";
+import type { PostedSalary } from "./jsonld";
+
 /**
  * Site-adapter contract. Each supported job board implements this so all
  * site-specific DOM knowledge (which breaks when the site ships a redesign) is
@@ -34,13 +37,41 @@ export interface SiteAdapter {
   getLocation(): string | null;
 
   /**
-   * The visible "About the job" text, or null when it isn't on the page.
+   * The visible "About the job" text WITH ITS PROVENANCE, or null when it isn't
+   * on the page.
    *
    * THE ONE EXCEPTION to "only identifiers leave the page", and it is narrow on
    * purpose: read only when the user clicks *Full Report*, sent once so the
    * backend can extract the job's requirements, and never stored as a listing —
    * only the derived report is kept, on that user's own row. Nothing calls this
    * on page load, and no background job calls it at all.
+   *
+   * It returns an `Extraction`, not a bare string, because every implementation
+   * here ends in a fallback and a wrong-but-long block of text is otherwise
+   * indistinguishable from a real posting. Reporting HOW the text was found
+   * lets the UI show the user what is about to be sent. See extraction.ts.
    */
-  getDescription(): string | null;
+  getDescription(): Extraction | null;
+
+  /**
+   * Months of experience the posting REQUIRES, when the site publishes it as a
+   * number rather than burying it in prose.
+   *
+   * Optional: only sites with structured job data can answer it, and a site that
+   * cannot simply omits the method. The match report prefers this over reading
+   * "3 years" out of the description, because a published number is unambiguous
+   * in any language — which is what makes the experience check work on a Khmer
+   * advert. See docs/MULTI_SITE_PLAN.md.
+   */
+  getRequiredMonths?(): number | null;
+
+  /**
+   * The pay the posting advertises, with its period, when the site publishes it as
+   * structured data. Optional for the same reason as getRequiredMonths.
+   *
+   * Displayed, NOT scored: the candidate's expected salary is stored without a period,
+   * so comparing a monthly advert against it would require assuming a unit the profile
+   * never captured. See the report's `job.salary`.
+   */
+  getSalary?(): PostedSalary | null;
 }

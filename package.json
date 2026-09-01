@@ -1,6 +1,6 @@
 {
   "name": "jobfit-extension",
-  "version": "0.0.1",
+  "version": "1.0.0",
   "description": "JobFit Chrome extension (MV3) — surfaces JobFit match intelligence on LinkedIn/Indeed job pages.",
   "type": "module",
   "private": true,

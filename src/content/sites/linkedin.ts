@@ -1,4 +1,5 @@
 import type { SiteAdapter } from "./types";
+import { cleanDescription, findFirstWithSelector, type Extraction } from "./extraction";
 
 /**
  * LinkedIn adapter. Two job-page URL shapes exist:
@@ -106,19 +107,16 @@ export const linkedin: SiteAdapter = {
     return location || null;
   },
 
-  getDescription(): string | null {
+  getDescription(): Extraction | null {
     // `innerText` (not textContent) so LinkedIn's <li>/<br> layout keeps its line
     // breaks — the requirement extractor reads a bulleted list far better than one
     // run-on paragraph, and textContent would glue every bullet together.
-    const text = firstMatch(DESCRIPTION_SELECTORS)?.innerText;
-    if (!text) return null;
-    const cleaned = text
-      .replace(/[ \t]+/g, " ")
-      .replace(/\n{3,}/g, "\n\n")
-      .trim();
+    const found = findFirstWithSelector(DESCRIPTION_SELECTORS);
+    if (!found?.el.innerText) return null;
+    const text = cleanDescription(found.el.innerText, MAX_DESCRIPTION_CHARS);
     // A stub like "About the job" alone means the panel hasn't loaded its body yet;
     // sending it would produce a report with no requirements in it.
-    if (cleaned.length < 80) return null;
-    return cleaned.slice(0, MAX_DESCRIPTION_CHARS);
+    if (text.length < 80) return null;
+    return { text, strategy: "selector", via: found.selector };
   },
 };

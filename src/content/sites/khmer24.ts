@@ -1,5 +1,6 @@
 import type { SiteAdapter } from "./types";
-import { findHeadingWithText, readJobPosting, readText } from "./jsonld";
+import { findHeadingWithText, readJobPosting, readText, type PostedSalary } from "./jsonld";
+import { cleanDescription, findFirstWithSelector, type Extraction } from "./extraction";
 
 /**
  * Khmer24 adapter — Cambodia's biggest classifieds site, jobs included.
@@ -114,22 +115,53 @@ export const khmer24: SiteAdapter = {
     return readJobPosting()?.location ?? null;
   },
 
-  getDescription(): string | null {
+  getDescription(): Extraction | null {
     // The JSON-LD `description` is authoritative when it carries the real body, but on
     // Khmer24 it is sometimes just the headline repeated — measured 12 characters on a
     // live ad. So take it only when it is substantial, and read the rendered ad
     // otherwise. (The rendered body is drawn by their JavaScript, so it exists in the
     // browser even though it is absent from the served HTML.)
     const fromLd = readJobPosting()?.description?.trim() ?? "";
-    if (fromLd.length >= MIN_DESCRIPTION) return fromLd.slice(0, MAX_DESCRIPTION);
+    if (fromLd.length >= MIN_DESCRIPTION) {
+      return {
+        text: cleanDescription(fromLd, MAX_DESCRIPTION),
+        strategy: "json-ld",
+        via: "JobPosting.description",
+      };
+    }
 
-    const rendered =
-      readText(firstMatch(DESCRIPTION_SELECTORS)) ??
-      longestParagraph(MIN_DESCRIPTION) ??
-      "";
-    const best = rendered.length > fromLd.length ? rendered : fromLd;
+    // Each remaining route is tracked separately. The last of them takes the
+    // biggest block of text on a CLASSIFIEDS page, where the neighbouring blocks
+    // are a safety-advice panel and other people's adverts — so when it is what
+    // supplied the text, the UI has to be able to say so.
+    const found = findFirstWithSelector(DESCRIPTION_SELECTORS);
+    const fromSelector = found ? readText(found.el) : null;
+    const fromLongest = fromSelector ? null : longestParagraph(MIN_DESCRIPTION);
+    const rendered = fromSelector ?? fromLongest ?? "";
+
+    const useRendered = rendered.length > fromLd.length;
+    const best = useRendered ? rendered : fromLd;
     if (best.length < MIN_DESCRIPTION) return null;
 
-    return best.replace(/[ \t]+/g, " ").replace(/\n{3,}/g, "\n\n").trim().slice(0, MAX_DESCRIPTION);
+    const text = cleanDescription(best, MAX_DESCRIPTION);
+    if (!useRendered) {
+      return { text, strategy: "json-ld", via: "JobPosting.description" };
+    }
+    return fromSelector && found
+      ? { text, strategy: "selector", via: found.selector }
+      : { text, strategy: "longest-paragraph", via: "longest <p> on the page" };
+  },
+
+  /**
+   * The posting's own stated requirement, when it publishes one. Language-proof:
+   * a published 36 needs no reading of Khmer or English prose.
+   */
+  getRequiredMonths(): number | null {
+    return readJobPosting()?.requiredMonths ?? null;
+  },
+
+  /** Advertised pay with its period, when the site publishes it. Displayed, not scored. */
+  getSalary(): PostedSalary | null {
+    return readJobPosting()?.salary ?? null;
   },
 };

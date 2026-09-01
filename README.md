@@ -189,8 +189,11 @@ Submission copy, permission justifications, and the asset checklist are in
 [`docs/STORE_LISTING.md`](docs/STORE_LISTING.md). The privacy policy is
 [`PRIVACY.md`](PRIVACY.md) — it must be **hosted at a public URL** before submitting.
 
-Icons are generated, not hand-drawn: `npm run icons` regenerates the 16/48/128 PNGs
-(rounded brand-gradient tile + ✦ sparkle) via a dependency-free encoder.
+Icons are generated, not hand-drawn: `npm run icons` downsamples the brand logo
+master at `assets/logo.png` into the 16/48/128 PNGs via a dependency-free PNG
+decoder/encoder. To rebrand, replace that master (8-bit RGBA, square, non-interlaced)
+and re-run. The master lives outside `public/` on purpose — `public/` is copied
+verbatim into the bundle, so only the three generated icons ship.
 
 **This is the highest-risk DOM surface in the project** — the Easy Apply modal is a
 multi-step, dynamically rendered dialog whose markup LinkedIn changes often. Every
