@@ -14,7 +14,6 @@ export const DATA_SOURCE: {
   salary: Source;
   deadlines: Source;
   coverLetter: Source;
-  scout: Source;
   duplicates: Source;
   interview: Source;
   momentum: Source;
@@ -49,10 +48,6 @@ export const DATA_SOURCE: {
   // POST /generate/cover-letter — REAL (ungated extension route built 2026-08-10).
   // Composed from résumé + job title/company; AI when available, template fallback.
   coverLetter: "real",
-  // GET /recommendations/scout — REAL (route built 2026-08-10). Returns the user's
-  // recommendations at/above minScore (optionally newer than `since`), mapped to
-  // ScoutMatch. Internal jobs link to the web app; ingested jobs to their apply URL.
-  scout: "real",
   // GET /applications/similar — REAL (route built 2026-08-10). Matches the user's
   // prior applications by company (exact, case-insensitive) + title (contains).
   // No prior application → data:null → the warning stays hidden.

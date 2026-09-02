@@ -5,9 +5,10 @@
  *
  * PER ACCOUNT, NOT PER DEVICE. `chrome.storage.local` is scoped to the browser
  * profile, so a single blob meant that on a shared computer Bob signed in and
- * silently inherited Alice's "alert me above 85%". "Which jobs should interrupt
- * me" is a fact about a person's search, not about this laptop, so every read
- * and write is addressed to a user id. See @/shared/storageKeys.
+ * silently inherited Alice's "remind me about my closing jobs". "Which jobs
+ * should interrupt me" is a fact about a person's search, not about this
+ * laptop, so every read and write is addressed to a user id. See
+ * @/shared/storageKeys.
  */
 import type { ExtSettings } from "./types";
 import { accountKey } from "./storageKeys";
@@ -15,8 +16,6 @@ import { accountKey } from "./storageKeys";
 /** Alerts are opt-IN: nothing notifies until the user turns it on. */
 export const DEFAULT_SETTINGS: ExtSettings = {
   deadlineNotifications: false,
-  scoutAlerts: false,
-  scoutMinScore: 85,
 };
 
 export async function getSettings(userId: string): Promise<ExtSettings> {

@@ -43,7 +43,7 @@ enumerated — not assumed):
 | Salary panel | 8 | `GET /salary` | **real** | ✅ **route BUILT 2026-08-10** — P25/P50/P75 derived from PUBLISHED postings' `minSalary`/`maxSalary` at the company (role-filtered, company-wide fallback). `listed`=null, `fitPercentile`=P50 default. No postings → empty. |
 | Deadline chip + alarm | 7 | `GET /saved-jobs/deadline` (+`/upcoming-deadlines`) | mock | ⛔ **BLOCKED** — verified: **no deadline column exists anywhere** (`Job`, `SavedJob` have none). Needs a schema migration + a data source; external LinkedIn jobs aren't stored regardless. Stays mock. |
 | Duplicate detector | 10 | `GET /applications/similar` | **real** | ✅ **route BUILT 2026-08-10** — matches the user's prior applications by company (exact, case-insensitive) + title (contains). No match → warning hidden. |
-| Scout alerts | 11 | `GET /recommendations/scout` | **real** | ✅ **route BUILT 2026-08-10** — user's recommendations ≥ minScore (optionally newer than `since`); internal jobs link to the web app, ingested to their apply URL. |
+| ~~Scout alerts~~ | 11 | ~~`GET /recommendations/scout`~~ | — | 🗑️ **REMOVED from the extension 2026-09-02** — alarm, adapter, settings toggle and stored state all deleted; retired storage keys are purged on upgrade. The backend route still exists and is unused by the extension. |
 | Cover letter (Easy Apply auto-fill) | 9 | *(DOM inject, no endpoint)* | n/a | ⚠️ fragile DOM — test separately (§5) |
 | Save Job (badge form) | — | `POST/GET/DELETE /saved-jobs/external` | **real** | ✅ **routes BUILT 2026-08-13** (`jobfit-backend` saved-job module, `saved_external_jobs` table). Prefilled form (title/company/description/URL) + salary + notes. Separate from the web app's `/saved-jobs`, which needs an internal `jobId` a LinkedIn post never has. Re-saving updates, never duplicates. **Second route that receives posting text** — see §5. |
 | Full-page match report | — | `POST /match-report`, `GET /match-report/:id` | **real** | ✅ **module BUILT 2026-08-12** (`jobfit-backend/src/modules/match-report`) — composes résumé ATS/quality + external match + AI-extracted requirements matched against the résumé; stores the payload, returns `{id}`. Web page: `jobfit-frontend` `/(seeker)/match-report/[id]`. **The one route that receives the posting text** (Option A — see §5). |
@@ -92,7 +92,7 @@ flip the flag → test in-page → tick both boxes.
 | `GET /companies/by-name` | [x] 2026-08-10 | [x] |
 | `GET /salary` (aggregates Job.minSalary/maxSalary; no salary table) | [x] 2026-08-10 | [x] |
 | `GET /applications/similar` | [x] 2026-08-10 | [x] |
-| `GET /recommendations/scout` | [x] 2026-08-10 | [x] |
+| ~~`GET /recommendations/scout`~~ | [x] 2026-08-10 | — no longer called (feature removed 2026-09-02) |
 | ~~`GET /saved-jobs/deadline` (+upcoming)~~ | ⛔ BLOCKED — no deadline column in schema (migration + data source needed) | stays mock |
 
 **Phase C1 is complete** (every buildable route done; deadlines blocked on schema).

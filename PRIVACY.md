@@ -97,9 +97,7 @@ The extension calls:
 - **Your account** — `/auth/me`, `/auth/refresh-token`, `/auth/logout`
 - **Your applications** — `/applications`, `/applications/similar`, and the jobs they
   refer to (`/jobs/...`)
-- **Match scores** — `/recommendations/by-job` for the job you are viewing, and
-  `/recommendations/scout` for the optional background alert described under
-  *Notifications*
+- **Match scores** — `/recommendations/by-job` for the job you are viewing
 - **Saved jobs** — `/saved-jobs`, `/saved-jobs/external`, and deadline lookups
 - **Full Report** — `/match-report`
 - **Cover letters and interview prep** — `/generate/cover-letter`,
@@ -119,27 +117,25 @@ fetches nothing.
 
 Stored locally via `chrome.storage.local`, never transmitted anywhere:
 
-- your alert preferences (deadline reminders, job-scout alerts, minimum score)
+- your alert preferences (deadline reminders)
 - a list of job IDs already notified about, so you are not alerted twice
-- the timestamp of the last background scout check
 
 You can erase all of it at any time by removing the extension.
 
 ## Notifications
 
-Deadline reminders and job-scout alerts are **off by default** and only run after you turn
-them on in the extension popup. When enabled, the extension periodically asks the JobFit
-API whether any saved job is closing soon or any new high-scoring job exists, and shows a
-browser notification. These checks send no page content — only your session. Turning the
-settings off stops them.
+Deadline reminders are **off by default** and only run after you turn them on in the
+extension popup. When enabled, the extension periodically asks the JobFit API whether any
+saved job is closing soon, and shows a browser notification. These checks send no page
+content — only your session. Turning the setting off stops them.
 
 ## Permissions and why they are needed
 
 | Permission | Why |
 |---|---|
 | `storage` | Save your alert preferences and prevent duplicate notifications |
-| `alarms` | Schedule the periodic deadline/scout checks (required for MV3 background work) |
-| `notifications` | Show the deadline and job-scout alerts you opted into |
+| `alarms` | Schedule the periodic deadline checks (required for MV3 background work) |
+| `notifications` | Show the deadline reminders you opted into |
 | Host access to the JobFit API | Make the API requests described above |
 | Host access to the JobFit website | Reserved for signing you in from the extension; no page content is read |
 | Page access to `linkedin.com`, `indeed.com`, `jobnet.com.kh`, `khmer24.com`, `bongthom.com` | Display the JobFit badge and panels on job pages of those sites |

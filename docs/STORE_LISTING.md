@@ -64,8 +64,7 @@ WHAT YOU GET
   Your Applied / Interview / Offer stages in the popup, synced with your JobFit account.
 
 • Optional alerts
-  Get notified when a saved job is about to close, or when a new high-match role
-  appears. Both are off until you turn them on.
+  Get notified when a saved job is about to close. Off until you turn it on.
 
 PRIVACY FIRST
 
@@ -99,8 +98,8 @@ Display the signed-in user's JobFit job-match data on job pages at supported job
 | Permission | Justification to paste |
 |---|---|
 | `storage` | Stores the user's alert preferences and the IDs of jobs already notified about, so the same job is never notified twice. No personal data is stored. |
-| `alarms` | Manifest V3 service workers cannot use timers. Alarms schedule the periodic deadline and job-scout checks the user has opted into. |
-| `notifications` | Displays the deadline reminders and new-match alerts the user explicitly enabled in the extension settings. |
+| `alarms` | Manifest V3 service workers cannot use timers. Alarms schedule the periodic deadline checks the user has opted into. |
+| `notifications` | Displays the deadline reminders the user explicitly enabled in the extension settings. |
 | Host — JobFit API | The extension's data (match scores, company insights, salary, skill gaps, applications) is fetched from the JobFit API. This is the only server the extension contacts. |
 | Host — JobFit website | Reserved for signing the user in from the extension. No page content is read from it. |
 | Content scripts — `linkedin.com`, `indeed.com`, `jobnet.com.kh`, `khmer24.com`, `bongthom.com` | Required to display the JobFit badge and panels on job pages of the five supported job boards. The extension reads only the job's identifying details, plus the posting text when the user clicks Full Report or Save Job. |

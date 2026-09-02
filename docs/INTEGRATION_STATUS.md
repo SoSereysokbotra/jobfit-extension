@@ -26,7 +26,6 @@ e.g. `POST /auth/login` → `400`, confirming the method is sound).
 | Skill gaps | `GET /learning/gap` | **404** |
 | Company panel | `GET /companies/by-name` | **404** |
 | Salary panel | `GET /salary` | **404** |
-| Scout alerts | `GET /recommendations/scout` | **404** |
 | Deadline chip | `GET /saved-jobs/deadline` | **404** |
 | Cover letter | `POST /generate/cover-letter` | **404** |
 
@@ -91,7 +90,6 @@ Per endpoint, in `jobfit-backend` (all thin routes over existing services):
 | `GET /companies/by-name` | Lookup `Company` by name (fuzzy); already has the table |
 | `GET /salary` | Aggregate over `Job.minSalary/maxSalary` for title+company |
 | `GET /saved-jobs/deadline` | Add a deadline field / expose from `saved-job` |
-| `GET /recommendations/scout` | Query recent high-score recommendations for the user |
 | `POST /generate/cover-letter` | New route accepting `externalId/source/company/role`, calling the AI service (needs Blocker B fixed) |
 
 Once each lands, flip **one flag** in `src/data/source.ts` — no extension UI changes.

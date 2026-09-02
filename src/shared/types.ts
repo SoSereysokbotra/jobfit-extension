@@ -237,18 +237,6 @@ export interface CoverLetter {
   model: string | null;
 }
 
-// ─── P3 · Passive job-scout alerts (GET /recommendations/scout) ─────────────
-export interface ScoutMatch {
-  externalId: string;
-  source: JobSource;
-  title: string;
-  company: string | null;
-  /** 0–100 overall match. */
-  score: number;
-  /** Where to send the user when they click the notification. */
-  url: string;
-}
-
 // ─── P2 · Duplicate application detector (GET /applications/similar) ─────────
 export interface DuplicateMatch {
   applicationId: string;
@@ -333,8 +321,4 @@ export interface SaveJobInput {
 export interface ExtSettings {
   /** Opt-in browser notifications for approaching saved-job deadlines. */
   deadlineNotifications: boolean;
-  /** Opt-in background alerts for new high-match jobs. */
-  scoutAlerts: boolean;
-  /** Only alert on jobs scoring at or above this (0–100). */
-  scoutMinScore: number;
 }
