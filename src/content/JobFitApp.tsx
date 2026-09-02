@@ -245,15 +245,18 @@ export function MatchDetails({
       <p className="jf-pl-20 jf-text-xs jf-text-content-tertiary">
         same for every job — it scores your CV, not this posting
       </p>
-      {/* Both of these are only as good as the identifier they were given; when
-          it was missing the backend still returns a number, so say it's a
+      {/* NO LOCATION BAR. `scoreLocation` is a five-value ladder over whole-word
+          string overlap between the posting's location text and the profile's
+          city/country — no geocoding, no distance, no commute, no notion that
+          "Phnom Penh" is in "Cambodia". A bar in a per-job panel reads as a
+          measured fit, and this cannot honestly claim to be one; showing it
+          would commit us to building real geo matching to make it true. It is
+          still SENT and still scored (15% of the backend's total) — this hides
+          the claim, not the input. See `evidence.location`, which continues to
+          report that location was used.
+          Salary/industry are only as good as the identifier they were given;
+          when it was missing the backend still returns a number, so say it's a
           fallback rather than drawing an unqualified bar. */}
-      <ScoreBar label="Location" value={s.location} />
-      {!location && (
-        <p className="jf-pl-20 jf-text-xs jf-text-content-tertiary">
-          no location found on this page — general estimate
-        </p>
-      )}
       <ScoreBar label="Salary" value={s.salary} />
       <ScoreBar label="Industry" value={s.other} />
       {!company && (
