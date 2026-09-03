@@ -196,10 +196,14 @@ Rate-limited or model failure → normal error body; the UI shows the message wi
 
 ---
 
-## P3 · Job scout — `GET /recommendations/scout`
+## P3 · Job scout — `GET /recommendations/scout` — NOT USED
 
-Powers the passive background scout (Phase 11). Called by the service worker on a
-`chrome.alarms` schedule (every 3h) **only when the user has opted in**.
+> ⚠️ **The extension no longer calls this.** The passive job-scout alert was removed
+> on 2026-09-02 (alarm, adapter, settings toggle and stored state all deleted). The
+> contract is kept only as a record of the backend route, which still exists.
+
+Powered the passive background scout (Phase 11). Was called by the service worker on a
+`chrome.alarms` schedule (every 3h) **only when the user had opted in**.
 
 **Query:** `minScore` (integer 0–100), `since` (ISO timestamp of the last check, or omitted on first run).
 

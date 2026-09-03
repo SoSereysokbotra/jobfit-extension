@@ -8,7 +8,12 @@
  * not, so every read/write of account-derived state has to be told which user it
  * belongs to, and something has to notice when that user changes.
  */
-import { DEVICE_KEYS, LEGACY_UNSCOPED_KEYS, accountKey } from "@/shared/storageKeys";
+import {
+  DEVICE_KEYS,
+  LEGACY_UNSCOPED_KEYS,
+  RETIRED_KEY_PREFIXES,
+  accountKey,
+} from "@/shared/storageKeys";
 
 /** Prefix of every notification this extension creates. */
 const NOTIFICATION_PREFIX = "jobfit:";
@@ -46,11 +51,11 @@ async function clearOutstandingNotifications(): Promise<void> {
  * WHAT IS PURGED: the outgoing user's click-target map and any live
  * notifications — the state that can act on THIS device after they're gone.
  *
- * WHAT IS DELIBERATELY KEPT: their scoped preferences, already-notified id sets
- * and scout cursor. Those are namespaced, so Bob cannot read or inherit them,
- * and they are precisely what stops Alice being re-notified about the same
- * twenty jobs when she signs back in. Wiping them would trade a leak we have
- * already closed for a spam bug we haven't.
+ * WHAT IS DELIBERATELY KEPT: their scoped preferences and already-notified id
+ * sets. Those are namespaced, so Bob cannot read or inherit them, and they are
+ * precisely what stops Alice being re-notified about the same twenty jobs when
+ * she signs back in. Wiping them would trade a leak we have already closed for
+ * a spam bug we haven't.
  */
 export async function handOffDevice(previousUserId: string | null): Promise<void> {
   await clearOutstandingNotifications();
@@ -65,6 +70,22 @@ export async function handOffDevice(previousUserId: string | null): Promise<void
  */
 export async function purgeLegacyUnscopedState(): Promise<void> {
   await chrome.storage.local.remove([...LEGACY_UNSCOPED_KEYS]);
+}
+
+/**
+ * Drop the storage left behind by removed features. See `RETIRED_KEY_PREFIXES`.
+ *
+ * Enumerates the whole store (`get(null)`) because the retired keys are
+ * account-scoped: their suffixes are user ids this profile no longer has a list
+ * of. Runs on install/upgrade only, and touches nothing that doesn't match a
+ * retired prefix.
+ */
+export async function purgeRetiredState(): Promise<void> {
+  const all = await chrome.storage.local.get(null);
+  const stale = Object.keys(all).filter((key) =>
+    RETIRED_KEY_PREFIXES.some((prefix) => key.startsWith(prefix)),
+  );
+  if (stale.length) await chrome.storage.local.remove(stale);
 }
 
 /** Record who is now signed in, or clear the record when nobody is. */

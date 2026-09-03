@@ -160,20 +160,21 @@ There are **two entry points**, because most Easy Apply flows have no free-text 
 If a flow goes Résumé → Review with no text box, **no button is correct** — use
 entry point A and paste.
 
-## Testing Phase 11 (scout alerts)
+## Testing alerts
 
-1. Popup → **Settings** → enable **Job scout alerts**, pick a **minimum match score**.
-2. Both alert types are **opt-in** — nothing fires until switched on.
-3. To trigger a check immediately instead of waiting for the 3h alarm, open the worker
+Job scout alerts were **removed** (2026-09-02). Deadline reminders are the only
+alert left, and they are gated on `isSafeToShow("deadlines")` — the endpoint is
+still mocked, so the toggle appears in a dev build only.
+
+1. Popup → **Settings** → enable **Deadline reminders (sample data)**.
+2. It is **opt-in** — nothing fires until switched on.
+3. To trigger a check immediately instead of waiting for the 6h alarm, open the worker
    console (`chrome://extensions` → JobFit → **service worker**) and run:
    ```js
-   chrome.alarms.create("jobfit:scout-check", { when: Date.now() + 1000 })
+   chrome.alarms.create("jobfit:deadline-check", { when: Date.now() + 1000 })
    ```
-4. A notification appears for each new high-match job (max 3 per run, best first).
+4. A notification appears for each saved job closing within 72h.
    **Clicking it opens the job.** A given job is never notified twice.
-
-Scout data is mocked; flip `scout: "real"` in `src/data/source.ts` when
-`GET /recommendations/scout` ships.
 
 ## Packaging for the Chrome Web Store
 
@@ -223,7 +224,7 @@ Generation is mocked (`POST /generate/cover-letter` doesn't exist yet); flip
 | **8** | P1 Salary intelligence panel (mock adapter) | ✅ |
 | **9** | P1 Cover letter — badge panel + Easy Apply auto-fill (mock adapter) | ✅ |
 | **10** | P2 Retention set — duplicate detector, interview prep, momentum (real /analytics/my-stats) | ✅ |
-| **11** | P3 Scout alerts + ship (icons, privacy policy, store pack, packaging) | ✅ |
+| **11** | P3 ship (icons, privacy policy, store pack, packaging). Scout alerts shipped here and were **removed 2026-09-02**. | ✅ |
 
 ## Notes / decisions locked in
 

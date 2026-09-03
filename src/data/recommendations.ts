@@ -28,18 +28,31 @@ async function mock(input: JobMatchInput): Promise<JobMatch | null> {
   const subScores = {
     skills: scaled(h, 60, 95),
     experience: scaled(h >> 2, 55, 98),
-    location: scaled(h >> 4, 50, 100),
+    // Deterministically null for one job in four, so a dev build actually exercises the
+    // "not computed" row. The backend returns null whenever a place could not be
+    // resolved on either side, and a mock that never produced one would let that state
+    // ship untested.
+    location: h % 4 === 0 ? null : scaled(h >> 4, 30, 100),
     salary: scaled(h >> 6, 45, 92),
     other: scaled(h >> 8, 58, 96),
   };
-  // Same weighting the backend applies, so mock and real look consistent.
-  const overall = Math.round(
-    subScores.skills * 0.4 +
-      subScores.experience * 0.25 +
-      subScores.location * 0.15 +
-      subScores.salary * 0.1 +
-      subScores.other * 0.1,
-  );
+  // Same weighting AND the same null handling the backend applies (blendMeasured):
+  // an unmeasured component is dropped and the rest rescaled, never scored as neutral.
+  const parts: Array<[number | null, number]> = [
+    [subScores.skills, 0.4],
+    [subScores.experience, 0.25],
+    [subScores.location, 0.15],
+    [subScores.salary, 0.1],
+    [subScores.other, 0.1],
+  ];
+  let weighted = 0;
+  let weight = 0;
+  for (const [value, w] of parts) {
+    if (value === null) continue;
+    weighted += value * w;
+    weight += w;
+  }
+  const overall = Math.round(weighted / weight);
   return {
     externalId: input.externalId,
     source: input.source,

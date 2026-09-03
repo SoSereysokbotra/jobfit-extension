@@ -4,16 +4,16 @@
  *
  * WHY THIS EXISTS: these keys used to be fixed string literals scattered across
  * alarms.ts and settings.ts. `chrome.storage.local` is per browser PROFILE, not
- * per JobFit user, so on a shared computer Alice's alert preferences, her
- * already-notified job ids and her scout cursor were simply handed to Bob when
- * he signed in — he inherited her thresholds and silently MISSED alerts she had
- * already been shown. Naming the keys in one place makes the scoping rule
- * checkable instead of a convention nobody can see.
+ * per JobFit user, so on a shared computer Alice's alert preferences and her
+ * already-notified job ids were simply handed to Bob when he signed in — he
+ * inherited her settings and silently MISSED alerts she had already been shown.
+ * Naming the keys in one place makes the scoping rule checkable instead of a
+ * convention nobody can see.
  *
  * THE RULE: anything derived from who is signed in is account-scoped. Alert
- * preferences count — "notify me above 85%" is a statement about a person's job
- * search, not a property of this laptop — so there is deliberately no
- * device-level settings blob to inherit.
+ * preferences count — "remind me when my saved jobs close" is a statement about
+ * a person's job search, not a property of this laptop — so there is
+ * deliberately no device-level settings blob to inherit.
  */
 
 /** Keys that legitimately belong to the browser profile, not to a user. */
@@ -29,18 +29,14 @@ export const DEVICE_KEYS = {
 const ACCOUNT_BASES = {
   settings: "jobfit:settings",
   notifiedDeadlines: "jobfit:notified-deadlines",
-  notifiedScout: "jobfit:notified-scout",
   notificationUrls: "jobfit:notification-urls",
-  scoutLastRun: "jobfit:scout-last-run",
-  /** Scout matches fetched but not yet delivered — the per-run cap's overflow. */
-  scoutPending: "jobfit:scout-pending",
 } as const;
 
 export type AccountKeyName = keyof typeof ACCOUNT_BASES;
 
 /**
  * The storage key holding `name` for one user, e.g.
- * `jobfit:notified-scout:u:ckl3…`. A missing/blank id would collapse two
+ * `jobfit:notified-deadlines:u:ckl3…`. A missing/blank id would collapse two
  * accounts back into one shared bucket, so it throws rather than guessing.
  */
 export function accountKey(name: AccountKeyName, userId: string): string {
@@ -59,3 +55,19 @@ export function accountKey(name: AccountKeyName, userId: string): string {
  * a wiped preference lands on the safe value and the user re-enables it once.
  */
 export const LEGACY_UNSCOPED_KEYS: readonly string[] = Object.values(ACCOUNT_BASES);
+
+/**
+ * Key prefixes owned by the REMOVED job-scout alerts feature: its notified-id
+ * set, its `since` cursor and its deferred-delivery queue.
+ *
+ * Matched by PREFIX rather than listed exactly, because these were written both
+ * unscoped (pre-scoping builds) and per account (`…:u:<id>`), and the ids of
+ * everyone who ever signed in on this profile are not knowable up front. See
+ * `purgeRetiredState` — without it the queue and id sets simply sit in storage
+ * forever, since nothing reads or trims them any more.
+ */
+export const RETIRED_KEY_PREFIXES: readonly string[] = [
+  "jobfit:notified-scout",
+  "jobfit:scout-last-run",
+  "jobfit:scout-pending",
+];

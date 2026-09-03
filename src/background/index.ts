@@ -25,7 +25,7 @@ import {
   saveJobFor,
 } from "./features";
 import { registerAlarmHandlers, setupAlarms } from "./alarms";
-import { purgeLegacyUnscopedState } from "./account";
+import { purgeLegacyUnscopedState, purgeRetiredState } from "./account";
 
 async function handle(message: ExtMessage): Promise<unknown> {
   switch (message.type) {
@@ -115,6 +115,9 @@ chrome.runtime.onInstalled.addListener(() => {
   // @/shared/storageKeys `LEGACY_UNSCOPED_KEYS` for why it is dropped, not
   // migrated.
   void purgeLegacyUnscopedState();
+  // Likewise for state belonging to features that no longer exist — currently
+  // the removed job-scout alerts. See `RETIRED_KEY_PREFIXES`.
+  void purgeRetiredState();
 });
 chrome.runtime.onStartup.addListener(() => setupAlarms());
 registerAlarmHandlers();

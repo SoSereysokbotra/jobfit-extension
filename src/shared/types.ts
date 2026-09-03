@@ -48,7 +48,17 @@ export type JobSource =
 export interface JobMatchSubScores {
   skills: number;
   experience: number;
-  location: number;
+  /**
+   * NULL when the backend could not measure location — the profile or the posting
+   * named a place it could not resolve.
+   *
+   * A number here means two real places were compared (same city / same province /
+   * same country / different country). Null means no comparison happened, and the
+   * backend EXCLUDES it from `overall` rather than folding in a neutral value, so the
+   * UI must render "not computed" — never a low bar, which would read as a verdict on
+   * a comparison that never ran. Same contract as `semantic: false` for skills.
+   */
+  location: number | null;
   salary: number;
   other: number;
 }
@@ -237,18 +247,6 @@ export interface CoverLetter {
   model: string | null;
 }
 
-// ─── P3 · Passive job-scout alerts (GET /recommendations/scout) ─────────────
-export interface ScoutMatch {
-  externalId: string;
-  source: JobSource;
-  title: string;
-  company: string | null;
-  /** 0–100 overall match. */
-  score: number;
-  /** Where to send the user when they click the notification. */
-  url: string;
-}
-
 // ─── P2 · Duplicate application detector (GET /applications/similar) ─────────
 export interface DuplicateMatch {
   applicationId: string;
@@ -333,8 +331,4 @@ export interface SaveJobInput {
 export interface ExtSettings {
   /** Opt-in browser notifications for approaching saved-job deadlines. */
   deadlineNotifications: boolean;
-  /** Opt-in background alerts for new high-match jobs. */
-  scoutAlerts: boolean;
-  /** Only alert on jobs scoring at or above this (0–100). */
-  scoutMinScore: number;
 }

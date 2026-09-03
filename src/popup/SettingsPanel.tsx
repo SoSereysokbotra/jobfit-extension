@@ -5,18 +5,20 @@ import { isMock, isSafeToShow } from "@/data/source";
 import { useAuthState } from "./useAuthState";
 
 /**
- * Opt-in alert settings. Read by the background alarms (both use
- * chrome.storage.local via @/shared/settings) — nothing notifies until enabled.
+ * Opt-in alert settings. Read by the background alarms (via
+ * chrome.storage.local, @/shared/settings) — nothing notifies until enabled.
  *
  * HIDDEN WHEN SIGNED OUT, like the tracker and momentum panels. These
  * preferences belong to an account rather than to this browser profile (see
  * @/shared/storageKeys), so with nobody signed in there is no one to save them
- * for — and both alerts need an authenticated backend call to produce anything
+ * for — and the alert needs an authenticated backend call to produce anything
  * anyway. This also removes the old trap where a signed-out visitor could arm
  * alerts that then attached to whoever signed in next.
+ *
+ * ALSO HIDDEN WHEN EMPTY: deadline reminders are the only setting left, and
+ * they are themselves gated on `isSafeToShow`, so in a release build this panel
+ * has nothing to offer — render nothing rather than a bare "Settings" heading.
  */
-const SCORE_OPTIONS = [75, 80, 85, 90];
-
 function Toggle({
   label,
   hint,
@@ -71,49 +73,26 @@ export function SettingsPanel() {
 
   if (!userId || !settings) return null;
 
+  // Hidden while the deadline endpoint is mocked: offering the switch would
+  // promise reminders that either never arrive or, worse, arrive invented.
+  // See data/source.ts `isSafeToShow`. It is the panel's last setting, so when
+  // it goes, the panel goes with it.
+  if (!isSafeToShow("deadlines")) return null;
+
   return (
     <section className="flex flex-col gap-3 rounded-lg border border-border bg-card p-4 shadow-sm">
       <h2 className="text-sm font-semibold text-content">Settings</h2>
 
-      {/* Hidden while the deadline endpoint is mocked: offering the switch would
-          promise reminders that either never arrive or, worse, arrive invented.
-          See data/source.ts `isSafeToShow`. */}
-      {isSafeToShow("deadlines") && (
-        <Toggle
-          label={isMock("deadlines") ? "Deadline reminders (sample data)" : "Deadline reminders"}
-          hint={
-            isMock("deadlines")
-              ? "Dev build only — dates are fixtures, not real closing dates"
-              : "Notify me when a saved job closes soon"
-          }
-          checked={settings.deadlineNotifications}
-          onChange={(next) => void update({ deadlineNotifications: next })}
-        />
-      )}
-
       <Toggle
-        label="Job scout alerts"
-        hint="Notify me when a new high-match job appears"
-        checked={settings.scoutAlerts}
-        onChange={(next) => void update({ scoutAlerts: next })}
+        label={isMock("deadlines") ? "Deadline reminders (sample data)" : "Deadline reminders"}
+        hint={
+          isMock("deadlines")
+            ? "Dev build only — dates are fixtures, not real closing dates"
+            : "Notify me when a saved job closes soon"
+        }
+        checked={settings.deadlineNotifications}
+        onChange={(next) => void update({ deadlineNotifications: next })}
       />
-
-      {settings.scoutAlerts && (
-        <label className="flex items-center justify-between gap-3 pl-1">
-          <span className="text-xs text-content-tertiary">Minimum match score</span>
-          <select
-            value={settings.scoutMinScore}
-            onChange={(e) => void update({ scoutMinScore: Number(e.target.value) })}
-            className="rounded-md border border-border bg-surface px-2 py-1 text-xs text-content"
-          >
-            {SCORE_OPTIONS.map((score) => (
-              <option key={score} value={score}>
-                {score}%
-              </option>
-            ))}
-          </select>
-        </label>
-      )}
     </section>
   );
 }
