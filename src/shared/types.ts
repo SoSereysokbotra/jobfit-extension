@@ -48,7 +48,17 @@ export type JobSource =
 export interface JobMatchSubScores {
   skills: number;
   experience: number;
-  location: number;
+  /**
+   * NULL when the backend could not measure location — the profile or the posting
+   * named a place it could not resolve.
+   *
+   * A number here means two real places were compared (same city / same province /
+   * same country / different country). Null means no comparison happened, and the
+   * backend EXCLUDES it from `overall` rather than folding in a neutral value, so the
+   * UI must render "not computed" — never a low bar, which would read as a verdict on
+   * a comparison that never ran. Same contract as `semantic: false` for skills.
+   */
+  location: number | null;
   salary: number;
   other: number;
 }

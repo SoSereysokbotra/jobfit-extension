@@ -101,7 +101,9 @@ function DeadlineChip({ state }: { state: Loadable<JobDeadline> }) {
  * computable:
  *
  *   · skills 40   — only if the semantic comparison ran
- *   · location 15 — only if we could read a location
+ *   · location 15 — only if the backend could RESOLVE a place on both sides.
+ *     Not merely whether the page printed a location: it can name somewhere the
+ *     place table doesn't know, and the backend then excludes it from the total.
  *   · salary 10 ┐ both derive from the employer, so both need a company name
  *   · industry 10 ┘
  *   · experience 25 — NEVER job-specific. It counts entries on the CV without
@@ -203,12 +205,13 @@ export function MatchDetails({
   state,
   onRetry,
   company,
-  location,
 }: {
   state: Loadable<JobMatch>;
   onRetry: () => void;
   company: string | null;
-  location: string | null;
+  // No `location` prop: the panel no longer says anything about the job's location, so
+  // taking one would imply it does. The value is still SENT to the backend by the worker
+  // and still scored — see the match request in data/recommendations.ts.
 }) {
   if (state.status === "loading") return <SkeletonLines rows={5} />;
   if (state.status === "empty") return <StateNote text="No match data yet for this job." />;
@@ -222,7 +225,11 @@ export function MatchDetails({
   const evidence: Evidence = {
     skills: semantic,
     company: Boolean(company),
-    location: Boolean(location),
+    // Whether location was actually MEASURED, not merely whether the page showed a
+    // location string. Those differ: the page can name a place the backend cannot
+    // resolve, and claiming 15 points of job-specific evidence for a comparison that
+    // never ran is exactly the overstatement this panel exists to avoid.
+    location: s.location !== null,
   };
   return (
     <div className="jf-flex jf-flex-col jf-gap-1.5">
@@ -245,18 +252,18 @@ export function MatchDetails({
       <p className="jf-pl-20 jf-text-xs jf-text-content-tertiary">
         same for every job — it scores your CV, not this posting
       </p>
-      {/* NO LOCATION BAR. `scoreLocation` is a five-value ladder over whole-word
-          string overlap between the posting's location text and the profile's
-          city/country — no geocoding, no distance, no commute, no notion that
-          "Phnom Penh" is in "Cambodia". A bar in a per-job panel reads as a
-          measured fit, and this cannot honestly claim to be one; showing it
-          would commit us to building real geo matching to make it true. It is
-          still SENT and still scored (15% of the backend's total) — this hides
-          the claim, not the input. See `evidence.location`, which continues to
-          report that location was used.
-          Salary/industry are only as good as the identifier they were given;
-          when it was missing the backend still returns a number, so say it's a
-          fallback rather than drawing an unqualified bar. */}
+      {/* NO LOCATION ROW — a DISPLAY decision, not a scoring one.
+          Location is still sent, still resolved and still 15% of the backend's total.
+          It is not shown because it is only measurable when the posting states a place
+          the resolver can read: some job pages do, many don't, and a row that appears on
+          one posting and reads "not computed" on the next looks like a broken product
+          rather than uneven data. The score stays consistent; the row would not.
+          `evidence.location` still reports whether it counted, which is where the
+          honesty about this now lives.
+
+          Salary/industry are only as good as the identifier they were given; when it was
+          missing the backend still returns a number, so say it's a fallback rather than
+          drawing an unqualified bar. */}
       <ScoreBar label="Salary" value={s.salary} />
       <ScoreBar label="Industry" value={s.other} />
       {!company && (
@@ -456,7 +463,7 @@ export function JobFitApp({
             />
           )}
 
-          <MatchDetails state={state} onRetry={retry} company={company} location={location} />
+          <MatchDetails state={state} onRetry={retry} company={company} />
 
           <div className="jf-my-2.5 jf-border-t jf-border-border" />
 
