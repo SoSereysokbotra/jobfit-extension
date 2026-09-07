@@ -15,7 +15,7 @@ import { useWorkerData } from "./useWorkerData";
 // `source` is a flags-only module with no imports — the content script still
 // reaches the network only through the worker.
 import { isMock, isSafeToShow } from "@/data/source";
-import { openLogin, ScoreBar, SkeletonLines, StateNote } from "./ui";
+import { openLogin, ScoreRing, SkeletonLines, StateNote } from "./ui";
 import { SkillGapCards } from "./SkillGapCards";
 import { CompanySidebar } from "./CompanySidebar";
 import { SalaryPanel } from "./SalaryPanel";
@@ -96,21 +96,25 @@ function DeadlineChip({ state }: { state: Loadable<JobDeadline> }) {
  * soften that with vague wording, we state the arithmetic.
  *
  * The backend's weights (mirrored from JobMatchSubScores) are skills 40 ·
- * experience 25 · location 15 · salary 10 · industry 10. Each needs a specific
- * input, so how much of the total genuinely reflects THIS posting is
- * computable:
+ * experience 25 · location 15 · salary 10 — 90 points in total, which the backend
+ * normalises to 0-100. Each needs a specific input, so how much of the total
+ * genuinely reflects THIS posting is computable:
  *
  *   · skills 40   — only if the semantic comparison ran
  *   · location 15 — only if the backend could RESOLVE a place on both sides.
  *     Not merely whether the page printed a location: it can name somewhere the
  *     place table doesn't know, and the backend then excludes it from the total.
- *   · salary 10 ┐ both derive from the employer, so both need a company name
- *   · industry 10 ┘
+ *   · salary 10   — derives from the employer, so it needs a company name
  *   · experience 25 — NEVER job-specific. It counts entries on the CV without
  *     ever seeing the job, so it is the same number for every posting.
  *
- * Ceiling: 75. A "100% confident" title-based estimate cannot exist, and the UI
- * should not imply one.
+ * The industry sub-score used to add another 10 here and was deleted on
+ * 2026-09-02 (it was a flat 50 on every external job — see @/shared/types).
+ * `company` is therefore worth 10 now, not 20: keeping 20 would have credited
+ * this panel for a dimension that no longer exists.
+ *
+ * Ceiling: 65 of 90 = 72%. A "100% confident" title-based estimate cannot exist,
+ * and the UI should not imply one.
  */
 export interface Evidence {
   /** The semantic skills comparison ran (the only job-specific signal). */
@@ -119,9 +123,19 @@ export interface Evidence {
   location: boolean;
 }
 
-/** Percentage points of the total that reflect this posting rather than the CV. */
+/** Sum of the backend's weights that are measurable at all: 40 + 25 + 15 + 10. */
+const TOTAL_WEIGHT = 90;
+
+/**
+ * Share of the score that reflects THIS posting rather than the CV, as a percentage.
+ *
+ * A percentage rather than raw points because the backend normalises over the weights
+ * present: after the industry sub-score was removed the raw points total 90, so
+ * reporting "65" would understate the same evidence that used to read 75/100.
+ */
 export function jobSpecificWeight(e: Evidence): number {
-  return (e.skills ? 40 : 0) + (e.location ? 15 : 0) + (e.company ? 20 : 0);
+  const points = (e.skills ? 40 : 0) + (e.location ? 15 : 0) + (e.company ? 10 : 0);
+  return Math.round((points / TOTAL_WEIGHT) * 100);
 }
 
 type Confidence = "low" | "medium" | "high";
@@ -143,7 +157,7 @@ function ConfidenceChip({ evidence }: { evidence: Evidence }) {
   const level = confidenceOf(evidence);
   return (
     <span
-      title={`${jobSpecificWeight(evidence)} of 100 points come from this posting's own details. The job description is not used — open Full Report for that.`}
+      title={`${jobSpecificWeight(evidence)}% of this score comes from this posting's own details. The job description is not used — open Full Report for that.`}
       className={`jf-self-start jf-rounded-full jf-px-2 jf-py-0.5 jf-text-xs jf-font-semibold ${CONFIDENCE_STYLE[level]}`}
     >
       {level} confidence
@@ -233,44 +247,39 @@ export function MatchDetails({
   };
   return (
     <div className="jf-flex jf-flex-col jf-gap-1.5">
-      {/* Without an embedding the skills comparison never ran; the backend leaves it out
-          of the total, so the row says so instead of drawing a bar nobody measured. */}
-      {semantic ? (
-        <ScoreBar label="Skills" value={s.skills} />
-      ) : (
-        <div className="jf-flex jf-items-center jf-gap-3">
-          <span className="jf-w-20 jf-shrink-0 jf-text-sm jf-text-content-secondary">Skills</span>
-          <span className="jf-flex-1 jf-text-sm jf-text-content-tertiary">not computed</span>
-        </div>
-      )}
-      {/* "CV depth", not "Experience": this counts entries on the CV and never sees the
-          job, so it is the SAME number for every posting. The label carries that
-          caveat now — a bar in a per-job panel otherwise implies it measured this
-          job. The full report can do better: it has the description, so it reads
-          the stated years bar and checks it. */}
-      <ScoreBar label="CV depth" value={s.experience} />
-      <p className="jf-pl-20 jf-text-xs jf-text-content-tertiary">
-        same for every job — it scores your CV, not this posting
-      </p>
-      {/* NO LOCATION ROW — a DISPLAY decision, not a scoring one.
-          Location is still sent, still resolved and still 15% of the backend's total.
-          It is not shown because it is only measurable when the posting states a place
-          the resolver can read: some job pages do, many don't, and a row that appears on
-          one posting and reads "not computed" on the next looks like a broken product
-          rather than uneven data. The score stays consistent; the row would not.
-          `evidence.location` still reports whether it counted, which is where the
-          honesty about this now lives.
+      {/* TWO DIALS, SIDE BY SIDE. With only two sub-scores left, stacked bars read as
+          the top of a longer list; two rings read as the complete answer, which they are.
 
-          Salary/industry are only as good as the identifier they were given; when it was
-          missing the backend still returns a number, so say it's a fallback rather than
-          drawing an unqualified bar. */}
-      <ScoreBar label="Salary" value={s.salary} />
-      <ScoreBar label="Industry" value={s.other} />
-      {!company && (
-        <p className="jf-pl-20 jf-text-xs jf-text-content-tertiary">
-          no company found on this page — salary and industry are general estimates
-        </p>
-      )}
+          Skills is null-capable in effect: without an embedding the comparison never ran,
+          the backend leaves it out of the total, and the ring shows a dash rather than a
+          number nobody measured. */}
+      <div className="jf-flex jf-items-start jf-justify-center jf-gap-6 jf-py-2">
+        <ScoreRing label="Skills" value={semantic ? s.skills : null} />
+        {/* "CV depth", not "Experience": this counts entries on the CV and never sees the
+            job, so it is the SAME number for every posting. The caption carries that —
+            a dial in a per-job panel otherwise implies it measured this job. The full
+            report can do better: it has the description, so it reads the stated years
+            bar and checks it against the CV's dates. */}
+        <ScoreRing label="CV depth" value={s.experience} caption="same for every job" />
+      </div>
+      {/* NO LOCATION, SALARY OR INDUSTRY ROWS.
+          All three are DISPLAY decisions; only industry was actually deleted from the
+          backend. Location and salary are still sent, still scored and still part of the
+          total — they are simply not drawn here.
+
+          WHY: someone reading a job wants one answer — do I fit this role — and every
+          extra bar competes with it. These three could not give that answer anyway:
+
+            · location — measurable only when the posting names a place we can resolve,
+              so the row appeared on one job and read "not computed" on the next
+            · salary   — never reads the advert's pay (it is not even sent). It compares
+              the user's expected range against what that EMPLOYER pays in jobs already
+              in our database, and no LinkedIn employer is in it, so it was a flat 50
+            · industry — deleted outright; see @/shared/types
+
+          Skills is the only per-job signal, and CV depth is labelled as not being one.
+          The confidence chip below still accounts for all of it, so nothing is hidden
+          about how much of the score actually saw this posting. */}
       {!semantic && (
         <p className="jf-text-sm jf-text-content-tertiary">
           Skills fit couldn&apos;t be computed, so it&apos;s excluded from this score —

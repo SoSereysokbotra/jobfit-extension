@@ -34,7 +34,6 @@ async function mock(input: JobMatchInput): Promise<JobMatch | null> {
     // ship untested.
     location: h % 4 === 0 ? null : scaled(h >> 4, 30, 100),
     salary: scaled(h >> 6, 45, 92),
-    other: scaled(h >> 8, 58, 96),
   };
   // Same weighting AND the same null handling the backend applies (blendMeasured):
   // an unmeasured component is dropped and the rest rescaled, never scored as neutral.
@@ -43,7 +42,6 @@ async function mock(input: JobMatchInput): Promise<JobMatch | null> {
     [subScores.experience, 0.25],
     [subScores.location, 0.15],
     [subScores.salary, 0.1],
-    [subScores.other, 0.1],
   ];
   let weighted = 0;
   let weight = 0;
