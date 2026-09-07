@@ -30,6 +30,84 @@ export function ScoreBar({ label, value }: { label: string; value: number }) {
   );
 }
 
+/**
+ * A labelled circular gauge. `value` is 0–100; `null` renders the "not computed" ring.
+ *
+ * WHY A RING AND NOT A BAR: the panel is down to two sub-scores, and two lonely
+ * horizontal bars read as the start of a longer list the user should scroll for. Two
+ * side-by-side dials read as the whole answer, which is what they now are.
+ *
+ * The arc length is `strokeDasharray` — a computed value, the same permitted exception
+ * the bar's `width` uses. Colour still comes only from tokens (`var(--color-*)`, the
+ * same variables the `jf-` classes compile to), never a literal.
+ *
+ * Mirrors the dashboard's match widget (jobfit-frontend match-score-widget.tsx) so the
+ * same score looks the same in both places.
+ */
+export function ScoreRing({
+  label,
+  value,
+  caption,
+}: {
+  label: string;
+  /** Null = the backend could not measure it; the ring shows a dash, never a 0%. */
+  value: number | null;
+  /** Optional line under the label, for a caveat the number itself cannot carry. */
+  caption?: string;
+}) {
+  const RADIUS = 42;
+  const circumference = 2 * Math.PI * RADIUS;
+  const stroke =
+    value === null
+      ? "var(--color-neutral-100)"
+      : value >= 75
+        ? "var(--color-primary-600)"
+        : value >= 55
+          ? "var(--color-primary-400)"
+          : "var(--color-warning-500)";
+
+  return (
+    <div className="jf-flex jf-flex-1 jf-flex-col jf-items-center jf-gap-1">
+      <div className="jf-relative jf-h-32 jf-w-32">
+        <svg className="jf-h-32 jf-w-32 -jf-rotate-90" viewBox="0 0 100 100">
+          {/* Track */}
+          <circle
+            cx="50"
+            cy="50"
+            r={RADIUS}
+            fill="none"
+            stroke="var(--color-neutral-100)"
+            strokeWidth="10"
+          />
+          {/* Value arc. Omitted entirely when unmeasured — a 0-length arc would still
+              read as "zero", and zero is a score. */}
+          {value !== null && (
+            <circle
+              cx="50"
+              cy="50"
+              r={RADIUS}
+              fill="none"
+              stroke={stroke}
+              strokeWidth="10"
+              strokeLinecap="round"
+              strokeDasharray={`${(value / 100) * circumference} ${circumference}`}
+            />
+          )}
+        </svg>
+        <div className="jf-absolute jf-inset-0 jf-flex jf-items-center jf-justify-center">
+          <span className="jf-text-2xl jf-font-bold jf-text-content">
+            {value === null ? "–" : `${value}%`}
+          </span>
+        </div>
+      </div>
+      <span className="jf-text-base jf-font-semibold jf-text-content-secondary">{label}</span>
+      {caption && (
+        <span className="jf-text-center jf-text-xs jf-text-content-tertiary">{caption}</span>
+      )}
+    </div>
+  );
+}
+
 /** Skeleton lines for loading states (rule §4.2). */
 export function SkeletonLines({ rows = 3 }: { rows?: number }) {
   return (

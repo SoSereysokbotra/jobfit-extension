@@ -42,8 +42,13 @@ export type JobSource =
 // ─── P0 · Sub-score match (GET /recommendations/by-job) ─────────────────────
 /**
  * Mirrors the backend's `SubScores` verbatim (matching/domain/scoring/types.ts).
- * Weights: skills 40% · experience 25% · location 15% · salary 10% · other 10%.
- * NOTE `other` is industry alignment — the backend has no "culture" dimension.
+ * Weights: skills 40% · experience 25% · location 15% · salary 10%.
+ *
+ * The industry sub-score (`other`, 10%) was DELETED backend-side on 2026-09-02: it
+ * compared an Industry *id* against industry *names* so its match branch was
+ * unreachable, only 3% of companies had one recorded, and no external employer resolves
+ * to a company at all — so it was a flat 50 on every job the extension ever scored. A
+ * dimension identical for every job cannot rank anything.
  */
 export interface JobMatchSubScores {
   skills: number;
@@ -60,7 +65,6 @@ export interface JobMatchSubScores {
    */
   location: number | null;
   salary: number;
-  other: number;
 }
 
 export interface JobMatch {

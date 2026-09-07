@@ -35,9 +35,22 @@ import type {
 } from "@/shared/types";
 
 /**
- * Wrap an adapter call. `null` → empty; 401/403 → unauthenticated; anything else
- * that throws → error. `isEmpty` lets a feature treat a non-null-but-empty
- * payload (e.g. an empty gaps array) as the empty state.
+ * Wrap an adapter call. `null` → empty; 401 → unauthenticated; anything else that throws
+ * → error. `isEmpty` lets a feature treat a non-null-but-empty payload (e.g. an empty
+ * gaps array) as the empty state.
+ *
+ * 401 AND 403 ARE NOT THE SAME THING, and treating them as one caused a real bug: the
+ * cover-letter and interview-prep routes returned 403 ("requires a paid plan") to every
+ * signed-in user, and this function turned that into `unauthenticated`, so the panels
+ * said "Log in to JobFit to generate" to someone already logged in — with no action that
+ * could ever fix it.
+ *
+ *   401 — we do not know who you are.  "Log in" is the right thing to say.
+ *   403 — we know exactly who you are, you are simply not allowed. Saying "log in" is
+ *         false, and the user can log in forever without changing the outcome.
+ *
+ * A 403 therefore surfaces as an ERROR carrying the server's own explanation, which is
+ * the only text that can tell the user what is actually wrong.
  */
 async function toResult<T>(
   fn: () => Promise<T | null>,
@@ -48,7 +61,7 @@ async function toResult<T>(
     if (data == null || (isEmpty && isEmpty(data))) return { status: "empty" };
     return { status: "ok", data };
   } catch (error) {
-    if (error instanceof ApiError && (error.statusCode === 401 || error.statusCode === 403)) {
+    if (error instanceof ApiError && error.statusCode === 401) {
       return { status: "unauthenticated" };
     }
     return {
