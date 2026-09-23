@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useIsSeeker } from "./useAuthState";
 import { sendMessage, type DataResult } from "@/shared/messaging";
 import type { MomentumStats } from "@/shared/types";
 import { Skeleton } from "@/shared/components/Skeleton";
@@ -17,6 +18,7 @@ function Stat({ label, value }: { label: string; value: number | string }) {
 }
 
 export function MomentumPanel() {
+  const seeker = useIsSeeker();
   const [state, setState] = useState<{ status: "loading" } | DataResult<MomentumStats>>({
     status: "loading",
   });
@@ -36,7 +38,8 @@ export function MomentumPanel() {
     };
   }, []);
 
-  if (state.status === "unauthenticated") return null;
+  // Logged out, or not a job seeker — AuthPanel explains; this panel just stays away.
+  if (state.status === "unauthenticated" || !seeker) return null;
 
   return (
     <section className="rounded-lg border border-border bg-card p-4 shadow-sm">

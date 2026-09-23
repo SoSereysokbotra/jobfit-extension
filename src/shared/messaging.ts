@@ -21,6 +21,7 @@ import type {
   SaveJobInput,
   SkillGapReport,
   TrackedApplication,
+  UserRole,
 } from "./types";
 
 /** Resolved auth state the worker reports back to any UI surface. */
@@ -43,6 +44,14 @@ export type DataResult<T> =
 /** Messages the UI can send to the worker (discriminated by `type`). */
 export type ExtMessage =
   | { type: "AUTH_GET_STATE" }
+  /**
+   * The cached role of whoever is signed in, read from storage — NO network call.
+   *
+   * Exists so the content script can decide whether to inject the badge without
+   * spending an `/auth/me` on every job page. `null` means "not known yet", which the
+   * caller must treat as "show it".
+   */
+  | { type: "GET_ACTIVE_ROLE" }
   | { type: "AUTH_LOGOUT" }
   | {
       type: "GET_JOB_MATCH";
@@ -115,6 +124,7 @@ export type ExtMessage =
 /** Response shape per message type. */
 export interface ExtResponseMap {
   AUTH_GET_STATE: AuthState;
+  GET_ACTIVE_ROLE: UserRole | null;
   AUTH_LOGOUT: { ok: boolean };
   GET_JOB_MATCH: DataResult<JobMatch>;
   GET_COMPANY_INTEL: DataResult<CompanyIntel>;

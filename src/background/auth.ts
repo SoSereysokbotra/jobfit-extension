@@ -15,9 +15,58 @@
  * back to the externally_connectable bridge (option C).
  */
 import { api, ApiError, resetRefreshLatch, setAccessToken } from "./api";
-import { forgetActiveUser, getStoredActiveUser, handOffDevice, setActiveUser } from "./account";
+import {
+  forgetActiveUser,
+  getStoredActiveUser,
+  handOffDevice,
+  setActiveRole,
+  setActiveUser,
+} from "./account";
 import type { AuthState } from "@/shared/messaging";
-import type { AuthUser } from "@/shared/types";
+import type { AuthUser, UserRole } from "@/shared/types";
+
+/**
+ * In-flight / already-done marker for the lazy role lookup below.
+ *
+ * Module-scoped, so it lives exactly as long as this MV3 worker does. That is the right
+ * lifetime: it collapses a burst of job pages into ONE `/auth/me`, and a worker restart
+ * is a natural moment to ask again.
+ */
+let roleLookup: Promise<UserRole | null> | null = null;
+
+/**
+ * The signed-in user's role, for the content script's "should I inject?" question.
+ *
+ * Prefers the cache, and RESOLVES IT ONCE if the cache is cold.
+ *
+ * WHY THE LOOKUP EXISTS: caching alone was not enough. The role is only written when
+ * something calls `getAuthState()` — the popup opening, or an alarm firing. A user who
+ * installs the extension and goes straight to LinkedIn has an empty cache, so the badge
+ * fell back to "show" and an employer got the full panel anyway. Observed in exactly that
+ * order, which is the normal order.
+ *
+ * WHY IT IS STILL CHEAP: at most one `/auth/me` per worker lifetime, shared by every tab
+ * through `roleLookup`, and only while the cache is cold. It never becomes per-page —
+ * which is the thing that must not happen to this endpoint.
+ */
+export async function resolveActiveRole(): Promise<UserRole | null> {
+  // ONE FRESH LOOKUP PER WORKER LIFETIME — deliberately NOT a storage read.
+  //
+  // This used to return the cached role when one existed, which was wrong in the most
+  // ordinary way possible: sign in as an employer, sign out on the web app, sign back in
+  // as a job seeker, and the cache still said EMPLOYER — so the badge stayed hidden from
+  // a seeker with no way to recover but a logout inside the extension. A cache that is
+  // only written on login and only read forever is not a cache, it is a one-way latch.
+  //
+  // `roleLookup` still collapses every tab's question into a single `/auth/me`, and an
+  // MV3 worker is short-lived, so an account switch self-heals within a wake cycle.
+  // Storage stays written by getAuthState for the popup's warm start; it is just not the
+  // authority for this decision any more.
+  roleLookup ??= getAuthState().then((state) =>
+    state.status === "authenticated" ? state.user.role : null,
+  );
+  return roleLookup;
+}
 
 export async function getAuthState(): Promise<AuthState> {
   // User-initiated check (popup open): clear any previous failed-refresh latch
@@ -25,11 +74,16 @@ export async function getAuthState(): Promise<AuthState> {
   resetRefreshLatch();
   try {
     const user = await api.get<AuthUser>("/auth/me");
+    // Cache the role on the way past. This is the ONLY place the worker learns it, and
+    // doing it here means the content script can ask "is this a job seeker?" from storage
+    // instead of spending a request per job page. See DEVICE_KEYS.activeRole.
+    await setActiveRole(user.role);
     return { status: "authenticated", user };
   } catch (error) {
     if (error instanceof ApiError) {
       // 401/403 → simply not signed in (or session can't be restored).
       if (error.statusCode === 401 || error.statusCode === 403) {
+        await setActiveRole(null);
         return { status: "unauthenticated" };
       }
       return { status: "error", message: error.message, code: error.code };

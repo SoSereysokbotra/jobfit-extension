@@ -1,6 +1,6 @@
 import { Badge } from "@/shared/components/Badge";
 import { Skeleton } from "@/shared/components/Skeleton";
-import { LOGIN_URL } from "@/shared/config";
+import { LOGIN_URL, WEB_APP_URL } from "@/shared/config";
 import type { UserRole } from "@/shared/types";
 import { useAuthState } from "./useAuthState";
 
@@ -33,6 +33,52 @@ export function AuthPanel() {
 
   if (state.status === "authenticated") {
     const { user } = state;
+
+    // EMPLOYER / ADMIN — say so, instead of showing an empty product.
+    //
+    // JobFit for Chrome scores a job against a JOB SEEKER profile. These accounts have
+    // none, so every panel below rendered blank with nothing explaining why, and the
+    // LinkedIn badge is hidden entirely for them (see content/JobFitApp useBadgeAllowed).
+    // Nothing is being blocked that used to work: there was never anything here for them.
+    if (user.role !== "JOB_SEEKER") {
+      return (
+        <section className="rounded-lg border border-border bg-card p-4 shadow-sm">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-medium uppercase tracking-wide text-content-tertiary">
+              Signed in
+            </span>
+            <Badge variant="neutral" size="sm">
+              {roleLabel[user.role]}
+            </Badge>
+          </div>
+          <p className="mt-2 truncate text-sm text-content-secondary" title={user.email}>
+            {user.email}
+          </p>
+          <p className="mt-3 text-sm text-content">
+            This extension is for job seekers.
+          </p>
+          <p className="mt-1 text-sm text-content-secondary">
+            You&apos;re signed in as an {roleLabel[user.role]}, so there are no job
+            matches to show. Use the JobFit website instead.
+          </p>
+          <button
+            type="button"
+            onClick={() => void chrome.tabs.create({ url: WEB_APP_URL })}
+            className="mt-3 w-full rounded-md bg-primary-600 px-4 py-2 text-sm font-medium text-on-primary transition-all duration-200 hover:bg-primary-700"
+          >
+            Open JobFit website
+          </button>
+          <button
+            type="button"
+            onClick={() => void logout()}
+            className="mt-2 w-full rounded-md border border-border bg-surface px-4 py-2 text-sm font-medium text-content-secondary transition-all duration-200 hover:bg-surface-hover"
+          >
+            Log out
+          </button>
+        </section>
+      );
+    }
+
     return (
       <section className="rounded-lg border border-border bg-card p-4 shadow-sm">
         <div className="flex items-center justify-between">

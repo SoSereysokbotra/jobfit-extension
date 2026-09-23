@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { getSettings, setSettings } from "@/shared/settings";
 import type { ExtSettings } from "@/shared/types";
 import { isMock, isSafeToShow } from "@/data/source";
-import { useAuthState } from "./useAuthState";
+import { isSeeker, useAuthState } from "./useAuthState";
 
 /**
  * Opt-in alert settings. Read by the background alarms (via
@@ -48,7 +48,8 @@ function Toggle({
 
 export function SettingsPanel() {
   const { state } = useAuthState();
-  const userId = state.status === "authenticated" ? state.user.id : null;
+  // Seeker-only: these are job-alert preferences, meaningless for an employer/admin.
+  const userId = isSeeker(state) && state.status === "authenticated" ? state.user.id : null;
   const [settings, setLocal] = useState<ExtSettings | null>(null);
 
   useEffect(() => {

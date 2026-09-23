@@ -8,7 +8,7 @@
  * and loses it, the next request simply re-derives it from the refresh cookie.
  */
 import type { ExtMessage } from "@/shared/messaging";
-import { getAuthState, logout } from "./auth";
+import { getAuthState, logout, resolveActiveRole } from "./auth";
 import {
   createMatchReportFor,
   generateCoverLetterFor,
@@ -25,10 +25,15 @@ import {
   saveJobFor,
 } from "./features";
 import { registerAlarmHandlers, setupAlarms } from "./alarms";
+import { WEB_APP_URL } from "@/shared/config";
 import { purgeLegacyUnscopedState, purgeRetiredState } from "./account";
 
 async function handle(message: ExtMessage): Promise<unknown> {
   switch (message.type) {
+    case "GET_ACTIVE_ROLE":
+      // Cache first; one shared /auth/me per worker lifetime if it is cold. Never a
+      // request per job page — see resolveActiveRole.
+      return resolveActiveRole();
     case "AUTH_GET_STATE":
       return getAuthState();
     case "AUTH_LOGOUT":
@@ -107,8 +112,27 @@ async function handle(message: ExtMessage): Promise<unknown> {
   }
 }
 
-// Deadline-reminder alarm lifecycle (Phase 7).
-chrome.runtime.onInstalled.addListener(() => {
+// Deadline-reminder alarm lifecycle (Phase 7) + first-run welcome.
+chrome.runtime.onInstalled.addListener((details) => {
+  // FIRST INSTALL ONLY — open the site so the user knows what to do next.
+  //
+  // Without this, installing the extension produced no visible result at all: the user
+  // went to LinkedIn, got a badge with nothing in it, and had no way to learn that a
+  // JobFit account and a résumé are what make it work. Every comparable extension opens
+  // a page at this moment (Teal and Simplify both do).
+  //
+  // `details.reason` MUST be checked. This listener also fires on "update" and
+  // "chrome_update", so opening unconditionally would hijack a tab on every single
+  // version bump the Web Store pushes.
+  //
+  // It opens the LANDING page, not /onboarding/resume: onboarding has no auth guard —
+  // a logged-out visitor reaches the wizard and only discovers it cannot save when the
+  // request 401s. The landing page works signed in or out, and carries both sign-up and
+  // log-in. `tabs.create` needs no permission (see manifest.config.ts).
+  if (details.reason === "install") {
+    void chrome.tabs.create({ url: WEB_APP_URL });
+  }
+
   setupAlarms();
   // One-time cleanup for profiles upgraded from a build whose alert state was
   // shared across every JobFit account on this browser. See
