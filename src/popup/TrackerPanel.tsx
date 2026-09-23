@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useIsSeeker } from "./useAuthState";
 import { sendMessage, type DataResult } from "@/shared/messaging";
 import type { PipelineStage, TrackedApplication } from "@/shared/types";
 import { Skeleton } from "@/shared/components/Skeleton";
@@ -55,6 +56,7 @@ function StageGroup({ label, items }: { label: string; items: TrackedApplication
 }
 
 export function TrackerPanel() {
+  const seeker = useIsSeeker();
   const [state, setState] = useState<
     { status: "loading" } | DataResult<TrackedApplication[]>
   >({ status: "loading" });
@@ -73,8 +75,9 @@ export function TrackerPanel() {
     };
   }, []);
 
-  // Hidden when logged out — the AuthPanel already owns the login CTA.
-  if (state.status === "unauthenticated") return null;
+  // Hidden when logged out, and for employers/admins — the AuthPanel owns both the
+  // login CTA and the "this extension is for job seekers" explanation.
+  if (state.status === "unauthenticated" || !seeker) return null;
 
   return (
     <section className="rounded-lg border border-border bg-card p-4 shadow-sm">

@@ -8,6 +8,7 @@
  * not, so every read/write of account-derived state has to be told which user it
  * belongs to, and something has to notice when that user changes.
  */
+import type { UserRole } from "@/shared/types";
 import {
   DEVICE_KEYS,
   LEGACY_UNSCOPED_KEYS,
@@ -97,8 +98,38 @@ export async function setActiveUser(userId: string | null): Promise<void> {
   }
 }
 
+/**
+ * Remember the signed-in user's role, or clear it when nobody is signed in.
+ *
+ * Written wherever the worker learns it (getAuthState), so no caller needs a request of
+ * its own. See DEVICE_KEYS.activeRole.
+ */
+export async function setActiveRole(role: UserRole | null): Promise<void> {
+  if (role) {
+    await chrome.storage.local.set({ [DEVICE_KEYS.activeRole]: role });
+  } else {
+    await chrome.storage.local.remove(DEVICE_KEYS.activeRole);
+  }
+}
+
+/**
+ * The cached role, or null when it has never been learned on this device.
+ *
+ * NULL IS "UNKNOWN", NOT "FORBIDDEN". A caller deciding whether to show something must
+ * default to showing it: a fresh install has no cached role, and hiding the product from
+ * a job seeker because we have not asked yet is a far worse failure than briefly showing
+ * a badge to an employer.
+ */
+export async function getActiveRole(): Promise<UserRole | null> {
+  const stored = await chrome.storage.local.get(DEVICE_KEYS.activeRole);
+  return (stored[DEVICE_KEYS.activeRole] as UserRole | undefined) ?? null;
+}
+
 /** Sign-out side of the same handoff — called by the AUTH_LOGOUT path. */
 export async function forgetActiveUser(): Promise<void> {
   await handOffDevice(await getStoredActiveUser());
   await setActiveUser(null);
+  // The role goes with the user. Leaving a stale "EMPLOYER" behind would keep the badge
+  // suppressed for the job seeker who signs in next.
+  await setActiveRole(null);
 }

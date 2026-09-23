@@ -4,10 +4,14 @@
  * inline style anywhere is the score bar's dynamic `width` (a permitted computed
  * value, not color).
  */
-import { LOGIN_URL, WEB_APP_URL } from "@/shared/config";
+import { LOGIN_URL, ONBOARDING_URL, WEB_APP_URL } from "@/shared/config";
 
 export function openLogin(): void {
   window.open(LOGIN_URL, "_blank", "noopener");
+}
+/** The setup wizard — for a signed-in user who has no profile yet. */
+export function openOnboarding(): void {
+  window.open(ONBOARDING_URL, "_blank", "noopener");
 }
 export function openWebApp(path = ""): void {
   window.open(`${WEB_APP_URL}${path}`, "_blank", "noopener");

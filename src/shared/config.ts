@@ -21,3 +21,12 @@ export const WEB_APP_URL: string = trimSlash(
 
 /** Where the logged-out CTA sends the user to authenticate. */
 export const LOGIN_URL = `${WEB_APP_URL}/login`;
+
+/**
+ * Where a signed-in user with no profile has to go before anything can be scored.
+ *
+ * The 3-step wizard (résumé → profile → matches) is what CREATES the Profile row, and
+ * `/recommendations/by-job` returns nothing at all without one. Pointing at `/profile`
+ * instead would land them on an editor for a record that does not exist yet.
+ */
+export const ONBOARDING_URL = `${WEB_APP_URL}/onboarding/resume`;

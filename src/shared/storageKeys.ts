@@ -20,6 +20,19 @@
 export const DEVICE_KEYS = {
   /** The JobFit user id last seen signed in — how an account CHANGE is noticed. */
   activeUser: "jobfit:active-user",
+  /**
+   * The role of that user: "JOB_SEEKER" | "EMPLOYER" | "ADMIN".
+   *
+   * Cached so the CONTENT SCRIPT can ask "should I inject the badge here?" without a
+   * network call. Asking `/auth/me` per job page would double the extension's request
+   * volume on the one endpoint whose rate limiting has already bitten us once.
+   *
+   * DEVICE-scoped, not account-scoped, on purpose: it describes whoever is signed in
+   * right now, and it is written and overwritten by the same code that records
+   * `activeUser`. Absent means "not known yet", which callers must treat as "show
+   * everything" — never as "block".
+   */
+  activeRole: "jobfit:active-role",
 } as const;
 
 /**

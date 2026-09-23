@@ -5,7 +5,7 @@
  *   - Phase 5: skills-gap action cards (under the badge)
  *   - Phase 4: company intelligence sidebar (opened from the badge)
  */
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { sendMessage } from "@/shared/messaging";
 import type { JobDeadline, JobMatch, JobSource, PostedSalary } from "@/shared/types";
 import type { Loadable } from "./useWorkerData";
@@ -15,7 +15,7 @@ import { useWorkerData } from "./useWorkerData";
 // `source` is a flags-only module with no imports — the content script still
 // reaches the network only through the worker.
 import { isMock, isSafeToShow } from "@/data/source";
-import { openLogin, ScoreRing, SkeletonLines, StateNote } from "./ui";
+import { openLogin, openOnboarding, ScoreRing, SkeletonLines, StateNote } from "./ui";
 import { SkillGapCards } from "./SkillGapCards";
 import { CompanySidebar } from "./CompanySidebar";
 import { SalaryPanel } from "./SalaryPanel";
@@ -49,6 +49,63 @@ interface Props {
   getRequiredMonths: () => number | null;
   /** Pay as the posting advertises it, read on the same click. */
   getPostedSalary: () => PostedSalary | null;
+}
+
+/**
+ * Should the badge appear on this page at all?
+ *
+ * JobFit for Chrome is a JOB SEEKER product. An employer or admin signing in got the
+ * full badge on every LinkedIn job — and because those accounts have no seeker profile,
+ * the backend returned no match, so the pill rendered as a bare "✦ JobFit" with no
+ * number and a panel saying "No match data yet". A purple badge that explains nothing,
+ * on every job page, forever.
+ *
+ * THE DEFAULT IS TO SHOW. The role is read from the worker's cache, which is empty until
+ * the user has been looked up once (fresh install, or a worker that has never resolved
+ * anyone). Unknown therefore means SHOW: hiding the product from a job seeker because we
+ * have not asked yet is a far worse failure than briefly showing a badge to an employer.
+ *
+ * Costs no request: the worker answers from `chrome.storage`, never `/auth/me`.
+ */
+function useBadgeAllowed(): boolean | null {
+  // null = not known yet. The badge renders NOTHING in that state, so an employer never
+  // sees it flash in and vanish; the answer normally arrives in a few milliseconds from
+  // the worker's cache.
+  const [allowed, setAllowed] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    let active = true;
+
+    // A worker that is asleep, busy or broken must never cost a job seeker the product.
+    // If no answer arrives quickly, show the badge — the same default-to-show rule,
+    // enforced against silence rather than against an explicit "unknown".
+    const timeout = new Promise<"timeout">((resolve) =>
+      setTimeout(() => resolve("timeout"), 1500),
+    );
+
+    void Promise.race([sendMessage({ type: "GET_ACTIVE_ROLE" }), timeout])
+      .then((result) => {
+        if (!active) return;
+        // HIDE ONLY ON AN EXPLICIT NON-SEEKER ROLE. Everything else shows.
+        //
+        // This was `setAllowed(result === "JOB_SEEKER")`, which hid the badge for any
+        // answer that was not that exact string — including the worker's own
+        // `{status:"error"}` envelope. A worker hiccup silently removed the product for
+        // a paying-attention job seeker, which is precisely the failure the
+        // default-to-show rule exists to prevent. Listing the roles that hide it means a
+        // malformed, unknown or errored answer can only ever fall through to "show".
+        setAllowed(!(result === "EMPLOYER" || result === "ADMIN"));
+      })
+      .catch(() => {
+        if (active) setAllowed(true);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  return allowed;
 }
 
 /** Whole days until an ISO deadline (negative = past). */
@@ -209,7 +266,11 @@ function pillLabel(state: Loadable<JobMatch>): string {
     case "unauthenticated":
       return "Log in";
     case "empty":
-      return "";
+      // A match needs a PROFILE, and this endpoint returns nothing at all without one —
+      // that is the only way it can be empty. The pill used to render as a bare
+      // "✦ JobFit" here, which looked like a broken extension to precisely the person we
+      // most need to keep: a new user who has signed up but not finished setting up.
+      return "Set up";
     case "error":
       return "!";
   }
@@ -228,7 +289,18 @@ export function MatchDetails({
   // and still scored — see the match request in data/recommendations.ts.
 }) {
   if (state.status === "loading") return <SkeletonLines rows={5} />;
-  if (state.status === "empty") return <StateNote text="No match data yet for this job." />;
+  // EMPTY means one specific thing here: the account has no profile yet. `/recommendations
+  // /by-job` returns null only in that case, so this can say what to do rather than
+  // reporting an absence the user cannot act on.
+  if (state.status === "empty") {
+    return (
+      <StateNote
+        text="Finish setting up to see your match — add your résumé and location to JobFit. It takes a minute."
+        actionLabel="Complete my profile"
+        onAction={openOnboarding}
+      />
+    );
+  }
   if (state.status === "unauthenticated")
     return <StateNote text="Log in to see your match." actionLabel="Log in" onAction={openLogin} />;
   if (state.status === "error")
@@ -304,6 +376,9 @@ export function JobFitApp({
   getRequiredMonths,
   getPostedSalary,
 }: Props) {
+  // Hooks run unconditionally — the early return for a non-seeker is below, after every
+  // hook, because React forbids a conditional hook call.
+  const badgeAllowed = useBadgeAllowed();
   const [expanded, setExpanded] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [saveOpen, setSaveOpen] = useState(false);
@@ -353,6 +428,16 @@ export function JobFitApp({
   );
 
   const label = pillLabel(state);
+
+  // Nothing renders until we know who is looking (null), and nothing renders at all for
+  // an EMPLOYER / ADMIN (false).
+  //
+  // This product scores a job against a SEEKER profile, which those accounts do not
+  // have, so the badge could only ever show an empty pill and a panel reading "No match
+  // data yet for this job" — which is exactly what an employer reported seeing. A badge
+  // whose only message is "not for you", on every job page, is worse than no badge. The
+  // popup is where they get told why (see AuthPanel).
+  if (badgeAllowed !== true) return null;
 
   return (
     <div className="jf-relative jf-inline-flex jf-items-center jf-gap-1 jf-font-sans">
