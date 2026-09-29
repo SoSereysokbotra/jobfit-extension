@@ -14,7 +14,6 @@ import type {
   JobMatch,
   JobSource,
   MatchReportRef,
-  MomentumStats,
   PostedSalary,
   SalaryIntel,
   SavedJob,
@@ -89,7 +88,6 @@ export type ExtMessage =
       company: string | null;
       role: string | null;
     }
-  | { type: "GET_MOMENTUM" }
   | {
       type: "CREATE_MATCH_REPORT";
       externalId: string;
@@ -135,7 +133,6 @@ export interface ExtResponseMap {
   GENERATE_COVER_LETTER: DataResult<CoverLetter>;
   GET_DUPLICATE_CHECK: DataResult<DuplicateMatch>;
   GENERATE_INTERVIEW_PREP: DataResult<InterviewPrep>;
-  GET_MOMENTUM: DataResult<MomentumStats>;
   CREATE_MATCH_REPORT: DataResult<MatchReportRef>;
   SAVE_JOB: DataResult<SavedJob>;
   GET_SAVED_JOB: DataResult<SavedJob>;

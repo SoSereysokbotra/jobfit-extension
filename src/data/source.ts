@@ -16,7 +16,6 @@ export const DATA_SOURCE: {
   coverLetter: Source;
   duplicates: Source;
   interview: Source;
-  momentum: Source;
   matchReport: Source;
   savedJobs: Source;
 } = {
@@ -55,9 +54,6 @@ export const DATA_SOURCE: {
   // POST /generate/interview-prep — REAL (ungated extension route built 2026-08-10).
   // Questions from the job title; AI when available, static-question fallback.
   interview: "real",
-  // `momentum` uses the REAL, existing endpoint (GET /analytics/my-stats).
-  // Flip to "mock" to preview the widget without a backend.
-  momentum: "real",
   // POST /match-report — REAL (route built 2026-08-12). Composes résumé ATS/quality
   // scores + the external match + AI-extracted requirements matched against the
   // résumé, stores the payload and returns its id; the web app renders it at

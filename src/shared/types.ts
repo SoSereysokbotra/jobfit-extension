@@ -273,19 +273,6 @@ export interface InterviewPrep {
   model: string | null;
 }
 
-// ─── P2 · Momentum score (real: GET /analytics/my-stats) ────────────────────
-export interface MomentumStats {
-  totalApplications: number;
-  totalInterviews: number;
-  totalOffers: number;
-  /** Fractions in [0,1], per the backend AnalyticsStatsResponseDto. */
-  interviewRate: number;
-  offerRate: number;
-  profileViewCount: number;
-  /** 0–100 gamified momentum, derived from the counts above. */
-  momentum: number;
-}
-
 // ─── P4 · Full-page match report (POST /match-report) ───────────────────────
 /**
  * What the backend hands back after generating a report: just its id. The report
