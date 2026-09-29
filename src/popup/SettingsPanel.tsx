@@ -8,7 +8,7 @@ import { isSeeker, useAuthState } from "./useAuthState";
  * Opt-in alert settings. Read by the background alarms (via
  * chrome.storage.local, @/shared/settings) — nothing notifies until enabled.
  *
- * HIDDEN WHEN SIGNED OUT, like the tracker and momentum panels. These
+ * HIDDEN WHEN SIGNED OUT, like the tracker panel. These
  * preferences belong to an account rather than to this browser profile (see
  * @/shared/storageKeys), so with nobody signed in there is no one to save them
  * for — and the alert needs an authenticated backend call to produce anything

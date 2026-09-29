@@ -18,7 +18,6 @@ import {
   getDeadline,
   getDuplicateCheck,
   getJobMatch,
-  getMomentumStats,
   getSalary,
   getSavedJobFor,
   getSkillGapReport,
@@ -77,8 +76,6 @@ async function handle(message: ExtMessage): Promise<unknown> {
         company: message.company,
         role: message.role,
       });
-    case "GET_MOMENTUM":
-      return getMomentumStats();
     case "SAVE_JOB":
       return saveJobFor({
         externalId: message.externalId,

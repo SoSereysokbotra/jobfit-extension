@@ -13,7 +13,6 @@ import { getJobDeadline } from "@/data/deadlines";
 import { generateCoverLetter, type CoverLetterInput } from "@/data/generate";
 import { getDuplicateApplication, type DuplicateInput } from "@/data/duplicates";
 import { generateInterviewPrep, type InterviewInput } from "@/data/interview";
-import { getMomentum } from "@/data/momentum";
 import { createMatchReport, type MatchReportInput } from "@/data/matchReport";
 import { getSavedJob, saveJob } from "@/data/savedJobs";
 import type { DataResult } from "@/shared/messaging";
@@ -26,7 +25,6 @@ import type {
   JobMatch,
   JobSource,
   MatchReportRef,
-  MomentumStats,
   SalaryIntel,
   SavedJob,
   SaveJobInput,
@@ -141,9 +139,6 @@ export function generateInterviewPrepFor(
   );
 }
 
-export function getMomentumStats(): Promise<DataResult<MomentumStats>> {
-  return toResult(() => getMomentum());
-}
 
 export function saveJobFor(input: SaveJobInput): Promise<DataResult<SavedJob>> {
   return toResult(() => saveJob(input));

@@ -17,13 +17,12 @@ import { useWorkerData } from "./useWorkerData";
 import { isMock, isSafeToShow } from "@/data/source";
 import { openLogin, openOnboarding, ScoreRing, SkeletonLines, StateNote } from "./ui";
 import { SkillGapCards } from "./SkillGapCards";
-import { CompanySidebar } from "./CompanySidebar";
 import { SalaryPanel } from "./SalaryPanel";
 import { CoverLetterPanel } from "./CoverLetterPanel";
 import { DuplicateWarning } from "./DuplicateWarning";
 import { InterviewPrepPanel } from "./InterviewPrepPanel";
 import { SaveJobPanel } from "./SaveJobPanel";
-import { AnchoredOverlay, FullscreenOverlay } from "./OverlayLayer";
+import { AnchoredOverlay } from "./OverlayLayer";
 
 interface Props {
   externalId: string;
@@ -380,7 +379,6 @@ export function JobFitApp({
   // hook, because React forbids a conditional hook call.
   const badgeAllowed = useBadgeAllowed();
   const [expanded, setExpanded] = useState(false);
-  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [saveOpen, setSaveOpen] = useState(false);
   // The description is read ONLY here, on the click — never at mount. A failed
   // read is reported instead of producing a report with an empty skills table.
@@ -485,15 +483,6 @@ export function JobFitApp({
               )}
             </div>
             <div className="jf-flex jf-shrink-0 jf-flex-col jf-items-end jf-gap-1">
-              {company && (
-                <button
-                  type="button"
-                  onClick={() => setSidebarOpen(true)}
-                  className="jf-rounded-md jf-border-none jf-bg-transparent jf-px-3 jf-py-1.5 jf-text-sm jf-font-medium jf-text-primary-600 jf-transition-all jf-duration-200 hover:jf-bg-surface-hover"
-                >
-                  Company
-                </button>
-              )}
               {/* Both need a title: it's what the report is ABOUT, and what the
                   save form requires. */}
               {role && (
@@ -590,11 +579,6 @@ export function JobFitApp({
         </AnchoredOverlay>
       )}
 
-      {sidebarOpen && company && (
-        <FullscreenOverlay>
-          <CompanySidebar name={company} onClose={() => setSidebarOpen(false)} />
-        </FullscreenOverlay>
-      )}
     </div>
   );
 }
